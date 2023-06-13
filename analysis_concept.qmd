@@ -1,0 +1,982 @@
+---
+title: "CONCEPT STROKE: Analytical pipeline"
+author: Data Science for Health Services and Policy Research (IACS)
+editor: visual
+#date: 
+bibliography: 
+- grateful-refs.bib 
+format: 
+  html:
+    embed-resources: true
+    toc: true
+    toc-depth: 4
+    highlight-style: pygments
+    code-fold: true
+    html-math-method: katex
+execute: 
+  warning: false
+  cache: false
+---
+
+```{css, echo = FALSE}
+.justify {
+  text-align: justify !important
+}
+```
+
+
+
+## Introduction
+
+### Definition
+
+CONCEPT STROKE is a study analysing the acute care received by patients with acute ischaemic stroke where the aim is to show the relevance of care pathways on outcomes (traces/trajectories) and efficiency of stroke care.
+
+-   Participating regions: Aragón, País Vasco, Cataluña, Navarra and Valencia.
+
+It is a two-stage design: 
+
+1- Cross-sectional data mining design 
+
+2- Quasi-experimental design comparing interventions in acute ischaemic stroke.
+
+The Main endpoints are: 
+
+1- In the first stage, the pathway of care as it occurs in real life and the propensity of a patient to follow a specific pathway (trace). 
+
+2- In the second stage, the survival of patients 30 days and 6 months after the admission to an emergency room
+
+### Cohort
+
+The cohort is defined as patients admitted to hospital due to acute ischaemic stroke.
+
+-   Inclusion criteria: Patients aged 18 years or older admitted to the emergency department (or with an unplanned hospital admission) with a principal diagnosis of acute ischaemic stroke during the study period.
+
+-   Exclusion criteria: Patients aged 17 years or younger; Patients with a diagnosis of acute haemorrhagic stroke or with other non-specific stroke diagnoses.
+
+-   Study period: 01-01-2010 to most recent data.
+
+### Analysis plan
+
+A- Process mining to discover and compare actual care pathways with the theoretical pathway and with those present in the participating regions.
+
+B- Survival analysis to provide prediction of health outcomes within each pathway.
+
+C- Hierarchical generalised additive hierarchical modelling to compare the effectiveness of interventions within pathways.
+
+D- Economic evaluation to measure economic impact and efficiency.
+
+
+## Running code
+
+
+The python libraries used are: 
+
+```{python}
+#| label: Load packages python
+import pm4py, datetime, subprocess
+import pandas as pd
+import numpy as np
+from pygam import PoissonGAM, LinearGAM, s, f, te, l
+# from sksurv.nonparametric import kaplan_meier_estimator
+import matplotlib.pyplot as plt
+from tabulate import tabulate
+from lifelines import KaplanMeierFitter, CoxPHFitter
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import RepeatedStratifiedKFold
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from pm4py.objects.conversion.log import converter as log_converter
+
+# process mining
+from pm4py.algo.discovery.alpha import algorithm as alpha_miner
+from pm4py.algo.discovery.inductive import algorithm as inductive_miner
+from pm4py.algo.discovery.heuristics import algorithm as heuristics_miner
+from pm4py.algo.discovery.dfg import algorithm as dfg_discovery
+
+# viz
+from pm4py.visualization.petri_net import visualizer as pn_visualizer
+from pm4py.visualization.process_tree import visualizer as pt_visualizer
+from pm4py.visualization.heuristics_net import visualizer as hn_visualizer
+from pm4py.visualization.dfg import visualizer as dfg_visualization
+
+# misc
+from pm4py.objects.conversion.dfg import converter as dfg_mining
+#from pm4py.objects.conversion.process_tree import converter as pt_converter
+
+```
+
+```{python,  echo = FALSE}
+#| label: set date columns
+
+
+##### All date columns
+date_columns = ['hospital_admission_date_dt',
+                    'hospital_intervention_date_dt',
+                    'hospital_discharge_date_dt',
+                    'admission_emergency_care_dt',
+                    'triage_emergency_care_dt',
+                    'first_asisstance_medical_dt',
+                    'admission_to_observation_ward_dt',
+                    'internal_neurology_consultation_dt',
+                    'ct_mri_dt',
+                    'thrombolysis_emergency_dt',
+                    'discharge_from_emergency_dt',
+                    'exitus_dt',
+                    'date_first_readmissions_30days_all_cause_dt',
+                    'start_date_prescription_anticoagulants_dt',
+                    'end_date_prescription_anticoagulants_dt',
+                    'start_date_prescription_antiarrhythmic_dt',
+                    'end_date_prescription_antiarrhythmic_dt',
+                    'start_date_prescription_antihypertensive_dt',
+                    'end_date_prescription_antihypertensive_dt',
+                    'start_date_prescription_antiaggregants_dt',
+                    'end_date_prescription_antiaggregants_dt',
+                    'nihss_score_date_dt',
+                    'modified_rankin_scale_dt',
+                    'barthel_index_dt']
+
+
+
+```
+
+The R libraries used are: 
+
+```{r}
+#| label: load r packages
+
+
+
+pacman::p_load(dplyr,
+               knitr,
+               Hmisc,
+               mgcv,
+               lubridate,
+               bupaverse,
+               purrr,
+               processpredictR, 
+               keras,
+               tensorflow)
+```
+
+
+### Descriptive analysis
+
+To study the observed data, we performed a small exploratory analysis of the data. First, we must convert our DataFrame data to an Event Log object. However, one of the drawbacks we may have when creating our Event Log is the granularity of the dates, as hospital dates are usually accurate to the day while emergency dates are usually accurate to the second. Therefore, we need to generate a function to check that they are correct and see if any of them do not make medical sense. We may find errors such as, for example, having emergency and hospital dates on the same day and, as they have different granularity, automatically the hospital date is ordered first or, for example, emergency discharge date is prior to the admission date, among others.  
+
+As part of the exploratory analysis it is interesting to know how many different pathways appear and the frequency of each one. This allows us to know what percentage of the pathways are among the most frequent pathways and which pathways are isolated cases. 
+
+
+The function created to convert the DataFrame into an Event Log and save the figure providing the information about the number of distinct pathways and their frequency is shown in the next code block:
+
+```{python}
+#| label: import csv and convert to event log
+def import_csv_and_convert_to_event_log(file_path):
+    
+    df = pd.read_csv(file_path, sep='|',parse_dates=date_columns)
+    df_origin = df
+    df = df.loc[:,df.columns.str.contains('patient_id|_dt') & ~df.columns.str.contains('prescription|exitus')]
+    df = pd.melt(df, id_vars='patient_id')
+    # Sort df by time
+    df.sort_values(['patient_id', 'value'], ascending=[False, True],inplace=True)
+    df.dropna(inplace = True)
+    df.rename(columns={'value': 'time:timestamp', 'patient_id': 'case:concept:name', 'variable': 'concept:name'},
+                     inplace=True)
+
+    # Convert to a event log object
+    event_log_:pm4py.objects.log.obj.EventLog = log_converter.apply(df)
+
+    result = []
+    for event_ in event_log_:
+        patient_id = event_._attributes['concept:name']
+        event_list = [ac['concept:name'] for ac in event_._list]
+        event_list = ','.join(event_list)
+        result.append({
+            'patient_id':patient_id,
+            'trace': event_list
+        })
+
+    result = pd.DataFrame(result)
+    unique_traces = result.groupby(['trace']).size().reset_index(name='freq_trace')
+    result = result.merge(unique_traces, on='trace', how='left')
+    unique_traces = unique_traces.sort_values('freq_trace', ascending=False)
+    unique_traces['index_trace'] = np.arange(len(unique_traces)) + 1
+    fig, ax = plt.subplots()
+    fig = unique_traces.plot(kind='bar',x = 'index_trace', y = 'freq_trace', figsize=(45, 20), fontsize=16).get_figure()
+    plt.xlabel('Index trace', fontsize = 20)
+    plt.ylabel('Frequency', fontsize = 20)
+    plt.title('Barplot unique traces', fontsize = 24)
+    plt.rc('axes', titlesize=12)  # fontsize of the axes title
+    fig.savefig('./outputs/barplot_unique_traces.png')
+    plt.close()
+    return df, result, unique_traces, df_origin
+```
+
+The function created to check dates is shown in the next code block:
+
+```{python}
+#| label: Chek dates
+def check_dates_hospital_emergency(df):
+
+    # emergencias
+    emergency_care_admission_date = ['admission_emergency_care_dt',
+                    'triage_emergency_care_dt',
+                    'first_asisstance_medical_dt',
+                    'admission_to_observation_ward_dt',
+                    'internal_neurology_consultation_dt',
+                    'ct_mri_dt',
+                    'thrombolysis_emergency_dt',
+                    'discharge_from_emergency_dt',
+                    'nihss_score_date_dt']
+    df_emergency = df[emergency_care_admission_date]
+    p = ((df_emergency.iloc[:,0:len(emergency_care_admission_date)].values >= df_emergency[['admission_emergency_care_dt']].values) & (df_emergency.iloc[:,
+            0:len(emergency_care_admission_date)].values <= df_emergency[['discharge_from_emergency_dt']].values)).all(axis=1)
+
+    print('There are', np.count_nonzero(p==False), 'errors in emergency dates, if there are errors they may be dates outside the limits or there may be dates without having entered the emergency')
+
+    # hospital
+    hospital_admission_date = ['hospital_admission_date_dt',
+                              'hospital_intervention_date_dt',
+                              'hospital_discharge_date_dt',
+                               'modified_rankin_scale_dt']
+    df_hospital = df[hospital_admission_date]
+    p = ((df_hospital.iloc[:,0:len(hospital_admission_date)].values >= df_hospital[['hospital_admission_date_dt']].values) & (df_hospital.iloc[:,
+            0:len(hospital_admission_date)].values <= df_hospital[['hospital_discharge_date_dt']].values)).all(axis=1)
+
+    print('There are', np.count_nonzero(p==False), 'errors in hospital dates, if there are errors they may be dates outside the limits or there are dates without having entered the hospital')
+    # emergencias con hospital
+   # df['hospital_admission_date_dt'] = pd.to_datetime(df['hospital_admission_date_dt']).dt.date
+   # df['admission_emergency_care_dt'] = pd.to_datetime(df['admission_emergency_care_dt']).dt.date
+   # df['discharge_from_emergency_dt'] = pd.to_datetime(df['discharge_from_emergency_dt']).dt.date
+    p = (df.loc[(df['hospital_admission_date_dt'] >= df['admission_emergency_care_dt']) & (df['hospital_admission_date_dt'] < df['discharge_from_emergency_dt'])])
+    print('There are', len(p), 'errors in hospital dates with emergency dates, the hospital admission date is between the emergency admission and discharge date (included).')
+
+```
+
+### A- Process Mining
+
+For process mining we created several functions depending on the part of the process mining study, which can be divided into: 
+
+- Process discovery 
+
+- Conformance checking 
+
+- Decision mining 
+
+- Prediction
+
+#### Process discovery
+
+Process discovery attempts to find a suitable process model that describes the order of events/activities that are executed during the execution of a process.
+
+The next step after the descriptive analysis was to build a Petri net to discover the process. For this, there are different algorithms: alpha mining, inductive mining or heuristic mining.
+
+However, another type of graph that can be built is the Directly Follows Graph (DFG), which is a graph that, although it can be part of the discovery process, serves as a descriptive analysis as it shows all possible pathways present in the data.
+
+The function created to build a Petri net and a DFG graph is shown in the next code block:
+
+```{python}
+#| label: Build petri net
+
+######### BUILD A PETRI NET ########
+
+def alpha_miner_algorithm(filtered_event_log):
+    net, initial_marking, final_marking = alpha_miner.apply(filtered_event_log)
+    parameters = {pn_visualizer.Variants.FREQUENCY.value.Parameters.FORMAT: "png"}
+    gviz = pn_visualizer.apply(net, initial_marking, final_marking,
+                               parameters=parameters,
+                               variant=pn_visualizer.Variants.FREQUENCY,
+                               log=filtered_event_log)
+    pn_visualizer.save(gviz, "./outputs/alpha_miner_petri_net.png")
+
+######### BUILD A PETRI NET ########
+def inductive_miner_algorithm(filtered_event_log):
+    tree = inductive_miner.apply(filtered_event_log)
+
+    gviz = pt_visualizer.apply(tree)
+    pn_visualizer.save(gviz, "./outputs/inductive_miner_tree.png")
+  
+    # Convert tree to petri net
+    net, initial_marking, final_marking = pm4py.convert_to_petri_net(tree)
+    gviz = pn_visualizer.apply(net, initial_marking, final_marking)
+    pn_visualizer.save(gviz, "./outputs/inductive_miner_petri_net.png")
+
+######### BUILD A HEURISTIC NET ########
+def heuristic_miner_algorithm(filtered_event_log):
+    heu_net = heuristics_miner.apply_heu(filtered_event_log, parameters={
+        heuristics_miner.Variants.CLASSIC.value.Parameters.DEPENDENCY_THRESH: 0.99})
+    gviz = hn_visualizer.apply(heu_net)
+    hn_visualizer.save(gviz, "./outputs/heuristic_miner.png")
+
+
+    ######### BUILD A DFG ########
+def directly_follows_graph(event_log,filtered_event_log):
+    dfg = dfg_discovery.apply(filtered_event_log)
+    gviz = dfg_visualization.apply(dfg, log=filtered_event_log, variant=dfg_visualization.Variants.FREQUENCY)
+    dfg_visualization.save(gviz,"./outputs/directly_follows_graph_filtered.png")
+    
+    # Convert Directly-Follows Graph to a Workflow Net
+    net, im, fm = dfg_mining.apply(dfg)
+    gviz = pn_visualizer.apply(net, im, fm)
+    pn_visualizer.save(gviz,"./outputs/workflow_net_filtered.png")
+    
+    dfg = dfg_discovery.apply(event_log)
+    gviz = dfg_visualization.apply(dfg, log=event_log, variant=dfg_visualization.Variants.FREQUENCY)
+    dfg_visualization.save(gviz,"./outputs/directly_follows_graph.png")
+    
+    # Convert Directly-Follows Graph to a Workflow Net
+    net, im, fm = dfg_mining.apply(dfg)
+    gviz = pn_visualizer.apply(net, im, fm)
+    pn_visualizer.save(gviz,"./outputs/workflow_net.png")
+
+
+
+```
+
+
+To reduce the high dimensionality, one option is to filter the traces to keep only the k most frequent traces. In this case we filtered by the k=10 most frequent traces and the function to do this is shown in the code block below:
+
+
+```{python}
+#| label: filter by most frequent traces
+
+def filter_for_k_freq_traces(event_log, traces, freq_traces, df, k):
+
+    filtered_event_log = pm4py.filter_variants_top_k(event_log, k)
+    traces_filtered = traces[traces['patient_id'].isin(filtered_event_log['case:concept:name'].unique())]
+    freq_traces_filtered = freq_traces[freq_traces['trace'].isin(traces_filtered['trace'].unique())]
+    freq_traces_filtered = freq_traces_filtered.sort_values('freq_trace', ascending = False)
+    freq_traces_filtered['rank_trace'] = np.arange(len(freq_traces_filtered))+1
+    traces_filtered = traces_filtered.merge(freq_traces_filtered, on=['trace','freq_trace'], how='left')
+    df_filtered = df[df['patient_id'].isin(traces_filtered['patient_id'])]
+    df_filtered = df_filtered.merge(traces_filtered[['freq_trace','rank_trace','patient_id']], on = 'patient_id', how = 'left')
+    traces_filtered = traces_filtered.sort_values('rank_trace')
+    traces_filtered.reset_index(drop=True, inplace=True)
+    col_names = ['rank_trace', 'freq_abs', 'freq_rel']
+    data = freq_traces_filtered[['rank_trace','freq_trace']]
+    data['freq_rel'] = (data['freq_trace']*100)/len(df)
+    #print(tabulate(data, headers=col_names, tablefmt="fancy_grid", showindex='None'))
+    return filtered_event_log, df_filtered, traces_filtered
+
+
+```
+
+#### Conformance checking
+
+Conformance checking is a technique for comparing a process model with an event record of the same process. However, as a first approximation, we made a comparison between the most frequent pathways and the one we established as theoretical by Jaccard similarity without taking into account the order, so that the quotient between is calculated:
+
+-   Numerator: number of activities that coincide between each of these pathways with the standard.
+
+-   Denominator: number of activities of the union between each one of these pathways with the regulation.
+
+The function to do this is shown in the code block below:
+```{python}
+#| label: Comparte most frequent traces with theorical trace by simple Jaccard
+# SIMPLE JACCARD: without regard to the order of activities
+
+def jaccard_similarity(trace_experimental, trace_theory):
+
+    trace_experimental = set(trace_experimental.split(','))
+    trace_theory = set(trace_theory.split(','))
+    # Find the intersection
+    intersection = trace_experimental.intersection(trace_theory)
+
+    # Find the union
+    union = trace_experimental.union(trace_theory)
+
+    # Calculate Jaccard similarity score
+    # using length of intersection set divided by length of union set
+    return float(len(intersection)) / len(union)
+
+
+```
+
+
+
+#### Decision mining
+
+Decision mining allows us to know what are the main characteristics of patients that make them follow a certain path. To do this, patient characteristics are added to the Event log. Petri net is created using the inductive algorithm and the decision points of the net are observed. We see the importance of the characteristics at one decision point. It is like a decision tree at the decision point. This step may be helpful to know which variables are of importance for input into the prediction model in the next section.
+
+The function to do this is shown in the code block below:
+
+```{python}
+#| label: decision mining
+
+
+def decision_mining(df,event_log,point):
+    df_carac = df[['patient_id','age_nm','sex_cd','hospital_cd','healthcare_area_cd','zip_code_cd',
+                   'municipality_code_cd','type_admission_cd','heart_failure_bl','atc_code_antiaggregants_cd',
+                   'barthel_index_nm']]
+    event_carac = event_log.merge(df_carac, left_on='case:concept:name', right_on='patient_id', how='left')
+    event_carac['org:resource'] = ''
+    # event_carac=event_carac.drop(event_carac.groupby('case:concept:name').tail(1).index, axis=0)
+    np.random.seed(10)
+
+    remove_n = 5000
+    drop_indices = np.random.choice(event_carac.index, remove_n, replace=False)
+    event_carac = event_carac.drop(drop_indices)
+    net, im, fm = pm4py.discover_petri_net_inductive(event_carac)
+    from pm4py.visualization.petri_net import visualizer
+    gviz = visualizer.apply(net, im, fm, parameters={visualizer.Variants.WO_DECORATION.value.Parameters.DEBUG: True})
+    visualizer.view(gviz)
+    visualizer.save(gviz,'./outputs/decision_mining_petri.png')
+    gviz = visualizer.apply(net, im, fm)
+    visualizer.save(gviz,'./outputs/decision_mining_petri_act.png')
+    visualizer.view(gviz)
+    from pm4py.algo.decision_mining import algorithm as decision_mining
+    X, y, class_names = decision_mining.apply(event_carac, net, im, fm, decision_point=point)
+    from pm4py.algo.decision_mining import algorithm as decision_mining
+    clf, feature_names, classes = decision_mining.get_decision_tree(event_carac, net, im, fm, decision_point=point)
+    #from pm4py.visualization.decisiontree import visualizer as tree_visualizer
+    #gviz = tree_visualizer.apply(clf, feature_names, classes)
+    #visualizer.view(gviz)
+
+    importances = clf.feature_importances_
+    tree_importances = pd.Series(importances, index=feature_names)
+
+    fig, ax = plt.subplots()
+    tree_importances.plot.bar(ax=ax)
+    ax.set_title("Feature importances using MDI")
+    ax.set_ylabel("Mean decrease in impurity")
+    fig.tight_layout()
+    fig.savefig('./outputs/barplot_features_importance.png')
+    return event_carac, tree_importances
+
+
+```
+
+#### Prediction
+
+To predict which pathway a given patient should follow based on his or her characteristics, we have used the *bupaR* library, which makes use of a transformer model to predict the pathway as a sequence of activities.Thus, an Event log with features and a transformer model is used to predict the next activity:
+
+
+The function to do this is shown in the code block below:
+
+```{r, warning = FALSE, output = FALSE}
+#| label: prediction next activity
+
+# 
+# library(keras)
+# use_condaenv("tf")
+# library(reticulate)
+# install_keras(method = c("conda"), conda = "auto", version = "default", tensorflow = "gpu")
+# 
+
+
+#### prueba bupar
+
+
+df <- read.csv('./inputs/event_log.csv', sep = '|') %>% rename(activity = concept.name, timestamp = time.timestamp) 
+df$timestamp <- ymd_hms(df$timestamp)
+df$registration_type <- 'completed'
+df$resource_id <- 'employee'
+df$activity_instance <- 1:nrow(df)
+
+# Para quitar 1000 filas aleatorias y disminuir el tamaño de las trayectorias
+# df <- df[-sample(nrow(df),1000),]
+
+p <- eventlog(df, case_id='patient_id',
+              activity_id = 'activity',
+              activity_instance_id = 'activity_instance',
+              timestamp = 'timestamp',
+              lifecycle_id = 'registration_type',
+              resource_id = 'resource_id')
+df <- prepare_examples(p, task = "next_activity",
+                       features = c('hospital_cd','ccaa_cd', 'healthcare_area_cd', 
+                                    'age_nm', 'sex_cd', 'socioeconomic_level_cd', 'atc_code_anticoagulants_cd'))
+
+
+#### MODEL ####
+ 
+split <- df %>% split_train_test(split = 0.8)
+
+            
+model <- split$train_df %>% create_model(name = "my_model") 
+model %>% compile()
+# default loss function: log-cosh or the categorical cross entropy, for regression tasks 
+#(next time and remaining time) and classification tasks, respectively.
+
+hist <- fit(object = model, train_data = split$train_df, epochs = 5)
+
+eval <- model %>% evaluate(split$test_df)
+
+predictions <- model %>% predict(test_data = split$test_df, 
+                                 output = "append") # default
+
+###### Custom model
+# custom_model <- split$train_df %>% create_model(custom = TRUE, name = "my_model")
+# custom_model <- custom_model %>%
+#   stack_layers(layer_dropout(rate = 0.1)) %>%
+#   stack_layers(layer_dense(units = 64, activation = 'relu'))
+# custom_model
+# custom_model %>% compile()
+# hist <- fit(object = custom_model, train_data = split$train_df, epochs = 5)
+# custom_model %>% evaluate(split$test_df)
+# 
+# predictions <- custom_model %>% predict(test_data = split$test_df,
+#                                         output = "append") # default
+
+
+#confusion_matrix(predictions)
+
+plot_confusion_matrix <- plot(predictions) +
+  theme(axis.text.x = element_text(angle = 90))
+
+png('./outputs/confusion_matrix_predictions_bupar.png', width= 1280, height = 720)
+plot(plot_confusion_matrix)
+dev.off()
+
+```
+
+Another option is to study and predict what is the most likely complete pathway a patient will follow. With:
+
+-   X = independent attributes/variables (e.g. patient characteristics)
+
+-   Y = complete pathways (e.g. 10 most frequent pathways)
+
+The function to do this is shown in the code block below:
+
+```{python}
+#| label: Multinomial model to predict complete traces
+
+
+def pred_trayec_completas(traces, freq_traces, df):
+
+    df_traces_pred = traces.merge(freq_traces, on='trace', how='left')
+    df_traces_pred = df_traces_pred.loc[df_traces_pred['index_trace'] <= 10]
+
+    # regr_1 = DecisionTreeClassifier(max_depth=3)
+    x = df.loc[df['patient_id'].isin(df_traces_pred['patient_id']), df.columns.str.contains('age_nm|sex_cd|ccaa_cd|hospital_st')]
+    y = df_traces_pred['index_trace']
+
+    cat_features = ["ccaa_cd", "hospital_st"]
+
+    x1 = pd.get_dummies(x, columns=cat_features)
+    model = LogisticRegression(multi_class='multinomial', solver='lbfgs')
+
+    X_train, X_test, y_train, y_test = train_test_split(x1, y, test_size=0.2, random_state=1)
+    model.fit(X_train,y_train)
+    y_pred = model.predict(X_test)
+
+    cm = confusion_matrix(y_test,y_pred)
+    disp = ConfusionMatrixDisplay(cm)
+    disp.plot()
+    # y_pred = model.predict_proba(X_test)
+
+    # define the model evaluation procedure
+    cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=1)
+    # evaluate the model and collect the scores
+    n_scores = cross_val_score(model, x1, y, scoring='accuracy', cv=cv, n_jobs=-1)
+    # report the model performance
+    print('Mean Accuracy: %.3f (%.3f)' % (np.mean(n_scores), np.std(n_scores)))
+
+    return df_traces_pred, y_pred, model
+
+```
+
+### B- Survival analysis
+
+We carried out a survival analysis with the 10 most frequent traces, constructing a Kaplan-Meier curve for each of them for comparison. Subsequently, a COX model was performed to compare these pathways and observe the Hazard Ratio (HR) of each pathway compared to the rest.
+
+The function to do this is shown in the code block below:
+```{python}
+#| label: survival analysis
+
+def survival_analysis(df_filtered):
+    end_study = datetime.date(year=2021, month=12, day=31)
+
+    df_filtered['status'] = True
+    df_filtered.loc[df_filtered['exitus_dt'].isna(), 'status'] = False
+
+    df_filtered['survival_in_days'] = (pd.to_datetime(end_study) - df_filtered[
+        'admission_emergency_care_dt']) / np.timedelta64(1, 'D')
+    df_filtered.loc[df_filtered['exitus_dt'].notna(), 'survival_in_days'] = (df_filtered['exitus_dt'] - df_filtered[
+        'admission_emergency_care_dt']) / np.timedelta64(1, 'D')
+
+    fig, ax = plt.subplots()
+    kmf = KaplanMeierFitter()
+    for value in df_filtered['rank_trace'].unique():
+        trace = df_filtered['rank_trace'] == value
+        kmf.fit(durations = df_filtered['survival_in_days'][trace], event_observed=df_filtered['status'][trace], label = 'Rank_trace' + str(value))
+        kmf.plot_survival_function(
+            label=value,
+            ax=ax
+        )
+
+        ax.set(
+            title='Kaplan-Meier survival curves',
+            xlabel='Days',
+            ylabel='Estimated Probability of Survival'
+        )
+
+        # time, survival_prob = kaplan_meier_estimator(df_filtered['status'][trace],df_filtered['survival_in_days'][trace])
+        # plt.step(time, survival_prob, where="post", label="%s (n = %d)" % (value, trace.sum()))
+
+    fig.savefig('./outputs/surv_analysis.png')
+
+
+
+    # En el modelo de Cox deben ser numerico or bool
+    df_filtered1 = df_filtered[['rank_trace', 'survival_in_days', 'status']]
+    dummies_rank_trace = pd.get_dummies(df_filtered1["rank_trace"], prefix='trace')
+    df_filtered1 = pd.concat([df_filtered1, dummies_rank_trace], axis=1)
+    df_filtered1 = df_filtered1.drop("rank_trace", axis=1)
+
+    # Añadimos penalizador porque en los sintéticos mucha colinealidad, quitar y probar con datos reales
+    cph = CoxPHFitter(penalizer=0.1)
+    cph.fit(df_filtered1,duration_col='survival_in_days', event_col='status')
+    cph.print_summary()
+
+
+
+    return df_filtered
+
+```
+
+### C- GAMM model
+
+Generalised additive mixed model (GAMM) with smoothed interaction between period (month) and intervention (reperfusion) and trace as an aggregation factor at the second level. Then, generate two new variables:
+
+-   Duration of the trace for each patient.
+-   Period in which the intervention took place.
+
+First we generated a DataFrame for gamm model:
+
+```{python}
+#| label: generate a df for gamm model
+
+
+def df_modelo_gam(df_filtered, filtered_event_log):
+
+    # preparar dataframe para el modelo
+    start_study = datetime.date(year=2010, month=1, day=1)
+    end_study = datetime.date(year=2021, month=12, day=31)
+
+    # Primer mes es periodo = 1 (no es periodo 0)
+    df_filtered['period'] = df_filtered['thrombolysis_emergency_dt'].apply(lambda x: 12*((x.year-start_study.year)) + (x.month - start_study.month) + 1)
+    # df_filtered.loc[df_filtered['hospital_intervention_date_dt'].notna(), 'period'] = df_filtered['hospital_intervention_date_dt'].apply(lambda x: 12*((x.year-start_study.year)) + (x.month - start_study.month) + 1)
+
+    for patient in df_filtered['patient_id']:
+        filtered_event_log_ = filtered_event_log[filtered_event_log['case:concept:name'] == patient]
+        filtered_event_log_.reset_index(drop=True, inplace=True)
+        df_filtered.loc[df_filtered['patient_id']==patient,'dur_trace']=(filtered_event_log_['time:timestamp'][len(filtered_event_log_['time:timestamp'])-1] - filtered_event_log_['time:timestamp'][0])/np.timedelta64(1,'D')
+
+    df_filtered['thrombolysis_emergency_bl'] = True
+    df_filtered.loc[df_filtered['thrombolysis_emergency_dt'].isna(), 'exitus_bl'] = False
+
+    df_filtered.to_csv('./outputs/df_gam.csv',sep='|', index=False)
+
+    # df_filtered['exitus_bl'] = True
+    # df_filtered.loc[df_filtered['exitus_dt'].isna(), 'exitus_bl'] = False
+    #pandas2ri.activate()
+    # exitus_bl = FloatVector(df_filtered['exitus_bl'])
+    # age_nm = FloatVector(df_filtered['age_nm'])
+    # rank_trace = df_filtered['rank_trace']
+    # mgcv = importr('mgcv')
+    # base = importr('base')
+    # stats = importr('stats')
+    # robjects.globalenv["age_nm"] = age_nm
+    # robjects.globalenv["exitus_bl"] = exitus_bl
+    # robjects.globalenv["rank_trace"] = rank_trace
+    # robjects.globalenv["df_filtered"] = df_filtered
+    # mod = mgcv.gam("exitus_bl ~ s(age_nm) + rank_trace")
+    # x = df_filtered.loc[:, ~df_filtered.columns.str.contains('_dt|exitus_bl|id|atc|hospital_st|ccaa_cd')]
+    # y = df_filtered.loc[:, df_filtered.columns == 'exitus_bl']
+    # gam = LinearGAM(s(x.columns.get_loc('age_nm')) + l(x.columns.get_loc('period'))).fit(x, y)
+    return df_filtered
+
+
+
+```
+
+Later, we built the gamm model:
+
+```{r, warning=FALSE, output = FALSE}
+#| label: gamm model
+
+
+df_gam <- read.csv(file = './outputs/df_gam.csv', sep = '|') %>% dplyr::select(!contains(c('patient_id',"_dt", 'atc')))
+df_gam$thrombolysis_emergency_bl <- as.integer(as.logical(df_gam$thrombolysis_emergency_bl))
+
+df_gam1 <- df_gam
+
+
+df_gam1$exitus_bl <- sample(0:1, nrow(df_gam1), replace = TRUE)
+
+df_gam1$thrombolysis_emergency_bl <- sample(0:1, nrow(df_gam1), replace = TRUE)
+
+model <- gam(exitus_bl ~ thrombolysis_emergency_bl + s(period, by = rank_trace, k = 20) +
+             s(age_nm, k = 20) + s(period, by = thrombolysis_emergency_bl, k = 20) + s(dur_trace) , 
+             data = df_gam1)
+
+
+
+# GAM.full <- gam(Yvar ~ s(age) + holiday + chf + pulmcirc + chrnlung + renlfail +
+#                   lymph + mets + coag + lytes + procedureF + s(Time.trend, by=procedureF) +
+#                   s(Nmonth, bs = "cc") +s(chos, bs="re", by=procedureF)
+#                 ,data=df,family=binomial(),method="REML")
+
+
+
+png("./outputs/gam_model.png")
+par(mfrow = c(2, 2))
+gam.check(model)
+dev.off()
+
+
+
+
+```
+
+## Results
+
+These results have been carried out with synthetic data previously generated according to the data model. 
+
+### Descriptive analysis
+
+First, we imported and converted our DataFrame to an Event Log and check dates. 
+
+```{python, echo = FALSE, warning = FALSE, output = FALSE}
+#| label: main code
+
+event_log, traces, freq_traces, df = import_csv_and_convert_to_event_log("./inputs/synthetic_data_concept_stroke.csv")
+
+print(event_log)
+
+check_dates_hospital_emergency(df)
+filtered_event_log, df_filtered, traces_filtered = filter_for_k_freq_traces(event_log, traces, freq_traces, df, k=10)
+
+
+```
+
+
+As a descriptive measure of the data, a bar plot with the number of distinct traces and their frequency.
+```{r, echo = FALSE, warning = FALSE, out.width = "1820px", out.height = "720px" , fig.cap="Bar plot with the number of distinct traces and their frequency"}
+#| label: fig-bar_plot_frequency
+
+include_graphics('./outputs/barplot_unique_traces.png')
+```
+
+### A- Process mining
+
+#### Process discovery
+
+Directly follows graph with all event log pathways:
+
+```{python, echo = FALSE, warning = FALSE, output = FALSE}
+#| label: dfg all results
+
+directly_follows_graph(event_log, filtered_event_log)
+
+```
+
+```{r, echo = FALSE, warning = FALSE, fig.cap="Directly follows graph with all event log pathways"}
+#| label: fig-Directly_follows_graph_all
+
+include_graphics('./outputs/directly_follows_graph.png')
+```
+
+
+This looks like spaghetti graph, so, in order to reduce the high dimensionality, we filtered the traces to keep only the k (k=10) most frequent traces:
+
+```{r, echo = FALSE, warning = FALSE, fig.cap="Directly follows graph with most frequent pathways"}
+#| label: fig-Directly_follows_graph_most_frequent
+
+include_graphics('./outputs/directly_follows_graph_filtered.png')
+```
+
+
+Alpha miner with only filtered traces:
+
+```{python, echo = FALSE, warning = FALSE, output = FALSE}
+#| label: alpha miner results
+
+alpha_miner_algorithm(filtered_event_log)
+
+```
+
+
+```{r, echo = FALSE, warning = FALSE, out.width = "3820px",  out.height = "480px",fig.cap="Alpha miner with only filtered traces"}
+#| label: fig-Alpha_miner 
+
+include_graphics('./outputs/alpha_miner_petri_net.png')
+```
+
+
+Inductive miner with only filtered traces:
+
+```{python, echo = FALSE, warning = FALSE, output = FALSE}
+#| label: Inductive miner results
+
+inductive_miner_algorithm(filtered_event_log)
+
+```
+
+```{r, echo = FALSE, warning = FALSE, fig.cap="Inductive miner with only filtered traces"}
+#| label: fig-Inductive_miner
+
+include_graphics('./outputs/inductive_miner_petri_net.png')
+```
+
+
+
+Heuristic miner with only filtered traces:
+
+```{python, echo = FALSE, warning = FALSE, output = FALSE}
+#| label: Heuristic miner results
+
+heuristic_miner_algorithm(filtered_event_log)
+
+```
+
+
+```{r, echo = FALSE, warning = FALSE, fig.cap="Heuristic miner with only filtered traces"}
+#| label: fig-Heuristic_miner
+
+include_graphics('./outputs/heuristic_miner.png')
+```
+
+
+
+#### Conformance checking
+
+Comparison of the 10 most frequent traces with the theoretical one, using Jaccard's similarity method without taking into account the order:
+
+The theorical trace is:
+
+```{python, echo = FALSE, warning = FALSE}
+#| label: theorical trace 
+trace_theory = str('admission_emergency_care_dt,triage_emergency_care_dt,first_asisstance_medical_dt,'
+                'internal_neurology_consultation_dt,ct_mri_dt,admission_to_observation_ward_dt,thrombolysis_emergency_dt'
+              'discharge_from_emergency_dt')
+print(trace_theory)
+
+```
+
+The Jaccard's similarity measured is:
+
+```{python, echo = FALSE, warning = FALSE}
+#| label: comparison checking results
+
+# SequenceMatcher(None, traces_filtered['trace'][0], trace_theory).ratio()
+for i in range(len(traces_filtered['trace'].unique())):
+    p = jaccard_similarity(traces_filtered['trace'].unique()[i], trace_theory)
+    print(p)
+
+```
+
+#### Decision mining
+
+First we created a petri net with the inductive algorithm that will allow us to know the different decision points, we can see that the two images below are the same petri net, showing in the first one the decision points and in the second one the activities (transitions). In this section, in order to create a petri net with decision points, it was necessary to delete records from the event log.
+
+```{python, echo = FALSE, warning = FALSE, output = FALSE}
+#| label: decision mining results
+
+event_carac, tree_importances = decision_mining(df,event_log,point='p_9')
+
+```
+
+
+```{r, echo = FALSE, warning = FALSE, out.width = "2920px",  out.height = "680px", fig.cap="Petri net wiht points for decision mining"}
+#| label: fig-decision_mining_petri
+
+include_graphics('./outputs/decision_mining_petri.png')
+```
+
+```{r, echo = FALSE, warning = FALSE, out.width = "2920px",  out.height = "680px", fig.cap="Petri net with activities for decision mining"}
+#| label: fig-decision_mining_petri_act
+
+include_graphics('./outputs/decision_mining_petri_act.png')
+```
+
+
+
+After that we created the petri net, we were able to see the importance of the features at one decision point (for example p_9).
+
+
+```{r, echo = FALSE, warning = FALSE, out.width = "720px", fig.cap="Petri net with activities for decision mining"}
+#| label: fig-barplot_features_importance
+
+include_graphics('./outputs/barplot_features_importance.png')
+```
+
+
+
+
+#### Prediction
+
+There are two methods for making predictions. On the one hand, we have to predict the following activity, using the bupaR tool that makes use of a transformer model. On the other hand, it is possible to predict complete pathways by choosing the 10 most frequent pathways and establishing which of these is the most likely to be followed by a patient.
+
+Starting with predicting the next activity, the shape of the dataframe resulting from the predictions and an evaluation of the model are shown, as well as a confusion matrix that allows a clear view of the accuracy of the model.
+
+
+```{r, echo = FALSE, warning = FALSE}
+#| label: prediction R results
+
+predictions
+
+```
+
+
+```{r, echo = FALSE, warning = FALSE, out.width = "1420px",out.height='720px', fig.cap="Confusion matrix for predictions"}
+#| label: fig-confusion_matrix
+
+include_graphics('./outputs/confusion_matrix_predictions_bupar.png')
+```
+
+
+
+For the second option, which of the most frequent traces (k=10) is the most likely to be followed by the patient and the model's accuracy mean:
+
+```{python, echo = FALSE, warning = FALSE, output=FALSE}
+#| label: prediction python results
+
+df_traces_pred, y_pred, model = pred_trayec_completas(traces, freq_traces, df)
+
+```
+
+### B- Survival analysis
+
+The kaplan-meier curves for the 10 most common pathways and the cox model summary are shown.
+
+```{python, echo = FALSE, warning = FALSE}
+#| label: survival analysis results
+
+df_surv = survival_analysis(df_filtered)
+
+
+```
+
+```{r, echo = FALSE, warning = FALSE, out.width = "720px", fig.cap="Survival analysis"}
+#| label: fig-survival_analysis_results
+
+include_graphics('./outputs/surv_analysis.png')
+```
+
+
+
+### C- GAMM model
+
+```{python, echo = FALSE}
+#| label: df gamm model results
+
+df_gam = df_modelo_gam(df_filtered, filtered_event_log)
+
+```
+
+The summary and plots for the gamm model are:
+
+```{r, echo = FALSE, warning = FALSE}
+#| label: gamm model results
+
+summary(model)
+
+par(mfrow = c(2, 2))
+gam.check(model)
+
+```
+
+
+
+
