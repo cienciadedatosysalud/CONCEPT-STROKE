@@ -3,6 +3,14 @@
 # CONCEPT-STROKE 
 CONCEPT-STROKE is a study analysing the acute care received by patients with acute ischaemic stroke where the general aim is to estimate the effectiveness and efficiency of the care pathway followed by acute ischaemic stroke patients, using Real World Data (RWD) routinely collected by five Spanish Regional Health Systems.
 
+### CONCEPT Project Coordinator
+**Enrique Bernal-Delgado MD PhD**
+
+Lead Researche Senior Researcher in Healthcare Services and Policies.
+
+Area of knowledge: Analysis of unjustified variations in healthcare performance. Comparative analysis of health systems. Methodology of research using real-world data.
+
+
 ## Main specific aims:
 
 - To discover the actual care pathway of Acute Ischemic Stroke, from the admission to an emergency room in a public hospital to the appearance of an event of interest after discharge. 
