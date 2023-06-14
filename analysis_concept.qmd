@@ -3,8 +3,7 @@ title: "CONCEPT STROKE: Analytical pipeline"
 author: Data Science for Health Services and Policy Research (IACS)
 editor: visual
 #date: 
-bibliography: 
-- grateful-refs.bib 
+# bibliography: 
 format: 
   html:
     embed-resources: true
@@ -210,8 +209,18 @@ def import_csv_and_convert_to_event_log(file_path):
     plt.rc('axes', titlesize=12)  # fontsize of the axes title
     fig.savefig('./outputs/barplot_unique_traces.png')
     plt.close()
+    df_out=df.merge(df_origin, left_on='case:concept:name', right_on='patient_id', how='left')
+    df_out.to_csv('./outputs/event_log.csv',sep='|', index=False)
     return df, result, unique_traces, df_origin
 ```
+
+```{python, echo = FALSE, warning = FALSE, output = FALSE}
+#| label: create_event_log_df
+
+event_log, traces, freq_traces, df = import_csv_and_convert_to_event_log("./inputs/synthetic_data_concept_stroke.csv")
+
+```
+
 
 The function created to check dates is shown in the next code block:
 
@@ -219,7 +228,7 @@ The function created to check dates is shown in the next code block:
 #| label: Chek dates
 def check_dates_hospital_emergency(df):
 
-    # emergencias
+    # emergency
     emergency_care_admission_date = ['admission_emergency_care_dt',
                     'triage_emergency_care_dt',
                     'first_asisstance_medical_dt',
@@ -245,10 +254,7 @@ def check_dates_hospital_emergency(df):
             0:len(hospital_admission_date)].values <= df_hospital[['hospital_discharge_date_dt']].values)).all(axis=1)
 
     print('There are', np.count_nonzero(p==False), 'errors in hospital dates, if there are errors they may be dates outside the limits or there are dates without having entered the hospital')
-    # emergencias con hospital
-   # df['hospital_admission_date_dt'] = pd.to_datetime(df['hospital_admission_date_dt']).dt.date
-   # df['admission_emergency_care_dt'] = pd.to_datetime(df['admission_emergency_care_dt']).dt.date
-   # df['discharge_from_emergency_dt'] = pd.to_datetime(df['discharge_from_emergency_dt']).dt.date
+
     p = (df.loc[(df['hospital_admission_date_dt'] >= df['admission_emergency_care_dt']) & (df['hospital_admission_date_dt'] < df['discharge_from_emergency_dt'])])
     print('There are', len(p), 'errors in hospital dates with emergency dates, the hospital admission date is between the emergency admission and discharge date (included).')
 
@@ -356,7 +362,7 @@ def filter_for_k_freq_traces(event_log, traces, freq_traces, df, k):
     col_names = ['rank_trace', 'freq_abs', 'freq_rel']
     data = freq_traces_filtered[['rank_trace','freq_trace']]
     data['freq_rel'] = (data['freq_trace']*100)/len(df)
-    #print(tabulate(data, headers=col_names, tablefmt="fancy_grid", showindex='None'))
+
     return filtered_event_log, df_filtered, traces_filtered
 
 
@@ -410,7 +416,7 @@ def decision_mining(df,event_log,point):
                    'barthel_index_nm']]
     event_carac = event_log.merge(df_carac, left_on='case:concept:name', right_on='patient_id', how='left')
     event_carac['org:resource'] = ''
-    # event_carac=event_carac.drop(event_carac.groupby('case:concept:name').tail(1).index, axis=0)
+    
     np.random.seed(10)
 
     remove_n = 5000
@@ -453,6 +459,7 @@ To predict which pathway a given patient should follow based on his or her chara
 
 The function to do this is shown in the code block below:
 
+
 ```{r, warning = FALSE, output = FALSE}
 #| label: prediction next activity
 
@@ -464,68 +471,69 @@ The function to do this is shown in the code block below:
 # 
 
 
-#### prueba bupar
+#### bupar
 
+  df <- read.csv('./outputs/event_log.csv', sep = '|') %>% rename(activity = concept.name, timestamp = time.timestamp) %>% 
+    select(!ends_with("_dt"))
+  df$timestamp <- ymd_hms(df$timestamp)
+  df$registration_type <- 'completed'
+  df$resource_id <- 'employee'
+  df$activity_instance <- 1:nrow(df)
+  
+  # Para quitar 1000 filas aleatorias y disminuir el tamaño de las trayectorias
+  # df <- df[-sample(nrow(df),1000),]
+  
+  p <- eventlog(df, case_id='patient_id',
+                activity_id = 'activity',
+                activity_instance_id = 'activity_instance',
+                timestamp = 'timestamp',
+                lifecycle_id = 'registration_type',
+                resource_id = 'resource_id')
+  df <- prepare_examples(p, task = "next_activity",
+                         features = c('hospital_cd','ccaa_cd', 'healthcare_area_cd', 
+                                      'age_nm', 'sex_cd', 'socioeconomic_level_cd', 'atc_code_anticoagulants_cd'))
+  
+  
+  #### MODEL ####
+   
+  split <- df %>% split_train_test(split = 0.8)
+  
+              
+  model <- split$train_df %>% create_model(name = "my_model") 
+  model %>% compile()
+  # default loss function: log-cosh or the categorical cross entropy, for regression tasks 
+  #(next time and remaining time) and classification tasks, respectively.
+  
+  hist <- fit(object = model, train_data = split$train_df, epochs = 5)
+  
+  eval <- model %>% evaluate(split$test_df)
+  
+  predictions <- model %>% predict(test_data = split$test_df, 
+                                   output = "append") # default
+  
+  ###### Custom model
+  # custom_model <- split$train_df %>% create_model(custom = TRUE, name = "my_model")
+  # custom_model <- custom_model %>%
+  #   stack_layers(layer_dropout(rate = 0.1)) %>%
+  #   stack_layers(layer_dense(units = 64, activation = 'relu'))
+  # custom_model
+  # custom_model %>% compile()
+  # hist <- fit(object = custom_model, train_data = split$train_df, epochs = 5)
+  # custom_model %>% evaluate(split$test_df)
+  # 
+  # predictions <- custom_model %>% predict(test_data = split$test_df,
+  #                                         output = "append") # default
+  
+  
+  # confusion_matrix(predictions)
+  
+  plot_confusion_matrix <- plot(predictions) +
+    theme(axis.text.x = element_text(angle = 90))
+  
+  png('./outputs/confusion_matrix_predictions_bupar.png', width= 1280, height = 720)
+  plot(plot_confusion_matrix)
+  dev.off()
 
-df <- read.csv('./inputs/event_log.csv', sep = '|') %>% rename(activity = concept.name, timestamp = time.timestamp) 
-df$timestamp <- ymd_hms(df$timestamp)
-df$registration_type <- 'completed'
-df$resource_id <- 'employee'
-df$activity_instance <- 1:nrow(df)
-
-# Para quitar 1000 filas aleatorias y disminuir el tamaño de las trayectorias
-# df <- df[-sample(nrow(df),1000),]
-
-p <- eventlog(df, case_id='patient_id',
-              activity_id = 'activity',
-              activity_instance_id = 'activity_instance',
-              timestamp = 'timestamp',
-              lifecycle_id = 'registration_type',
-              resource_id = 'resource_id')
-df <- prepare_examples(p, task = "next_activity",
-                       features = c('hospital_cd','ccaa_cd', 'healthcare_area_cd', 
-                                    'age_nm', 'sex_cd', 'socioeconomic_level_cd', 'atc_code_anticoagulants_cd'))
-
-
-#### MODEL ####
- 
-split <- df %>% split_train_test(split = 0.8)
-
-            
-model <- split$train_df %>% create_model(name = "my_model") 
-model %>% compile()
-# default loss function: log-cosh or the categorical cross entropy, for regression tasks 
-#(next time and remaining time) and classification tasks, respectively.
-
-hist <- fit(object = model, train_data = split$train_df, epochs = 5)
-
-eval <- model %>% evaluate(split$test_df)
-
-predictions <- model %>% predict(test_data = split$test_df, 
-                                 output = "append") # default
-
-###### Custom model
-# custom_model <- split$train_df %>% create_model(custom = TRUE, name = "my_model")
-# custom_model <- custom_model %>%
-#   stack_layers(layer_dropout(rate = 0.1)) %>%
-#   stack_layers(layer_dense(units = 64, activation = 'relu'))
-# custom_model
-# custom_model %>% compile()
-# hist <- fit(object = custom_model, train_data = split$train_df, epochs = 5)
-# custom_model %>% evaluate(split$test_df)
-# 
-# predictions <- custom_model %>% predict(test_data = split$test_df,
-#                                         output = "append") # default
-
-
-#confusion_matrix(predictions)
-
-plot_confusion_matrix <- plot(predictions) +
-  theme(axis.text.x = element_text(angle = 90))
-
-png('./outputs/confusion_matrix_predictions_bupar.png', width= 1280, height = 720)
-plot(plot_confusion_matrix)
-dev.off()
 
 ```
 
@@ -546,7 +554,7 @@ def pred_trayec_completas(traces, freq_traces, df):
     df_traces_pred = traces.merge(freq_traces, on='trace', how='left')
     df_traces_pred = df_traces_pred.loc[df_traces_pred['index_trace'] <= 10]
 
-    # regr_1 = DecisionTreeClassifier(max_depth=3)
+    
     x = df.loc[df['patient_id'].isin(df_traces_pred['patient_id']), df.columns.str.contains('age_nm|sex_cd|ccaa_cd|hospital_st')]
     y = df_traces_pred['index_trace']
 
@@ -562,7 +570,7 @@ def pred_trayec_completas(traces, freq_traces, df):
     cm = confusion_matrix(y_test,y_pred)
     disp = ConfusionMatrixDisplay(cm)
     disp.plot()
-    # y_pred = model.predict_proba(X_test)
+   
 
     # define the model evaluation procedure
     cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=1)
@@ -610,20 +618,18 @@ def survival_analysis(df_filtered):
             ylabel='Estimated Probability of Survival'
         )
 
-        # time, survival_prob = kaplan_meier_estimator(df_filtered['status'][trace],df_filtered['survival_in_days'][trace])
-        # plt.step(time, survival_prob, where="post", label="%s (n = %d)" % (value, trace.sum()))
+
 
     fig.savefig('./outputs/surv_analysis.png')
 
 
 
-    # En el modelo de Cox deben ser numerico or bool
+
     df_filtered1 = df_filtered[['rank_trace', 'survival_in_days', 'status']]
     dummies_rank_trace = pd.get_dummies(df_filtered1["rank_trace"], prefix='trace')
     df_filtered1 = pd.concat([df_filtered1, dummies_rank_trace], axis=1)
     df_filtered1 = df_filtered1.drop("rank_trace", axis=1)
 
-    # Añadimos penalizador porque en los sintéticos mucha colinealidad, quitar y probar con datos reales
     cph = CoxPHFitter(penalizer=0.1)
     cph.fit(df_filtered1,duration_col='survival_in_days', event_col='status')
     cph.print_summary()
@@ -649,13 +655,11 @@ First we generated a DataFrame for gamm model:
 
 def df_modelo_gam(df_filtered, filtered_event_log):
 
-    # preparar dataframe para el modelo
     start_study = datetime.date(year=2010, month=1, day=1)
     end_study = datetime.date(year=2021, month=12, day=31)
 
-    # Primer mes es periodo = 1 (no es periodo 0)
+
     df_filtered['period'] = df_filtered['thrombolysis_emergency_dt'].apply(lambda x: 12*((x.year-start_study.year)) + (x.month - start_study.month) + 1)
-    # df_filtered.loc[df_filtered['hospital_intervention_date_dt'].notna(), 'period'] = df_filtered['hospital_intervention_date_dt'].apply(lambda x: 12*((x.year-start_study.year)) + (x.month - start_study.month) + 1)
 
     for patient in df_filtered['patient_id']:
         filtered_event_log_ = filtered_event_log[filtered_event_log['case:concept:name'] == patient]
@@ -667,23 +671,6 @@ def df_modelo_gam(df_filtered, filtered_event_log):
 
     df_filtered.to_csv('./outputs/df_gam.csv',sep='|', index=False)
 
-    # df_filtered['exitus_bl'] = True
-    # df_filtered.loc[df_filtered['exitus_dt'].isna(), 'exitus_bl'] = False
-    #pandas2ri.activate()
-    # exitus_bl = FloatVector(df_filtered['exitus_bl'])
-    # age_nm = FloatVector(df_filtered['age_nm'])
-    # rank_trace = df_filtered['rank_trace']
-    # mgcv = importr('mgcv')
-    # base = importr('base')
-    # stats = importr('stats')
-    # robjects.globalenv["age_nm"] = age_nm
-    # robjects.globalenv["exitus_bl"] = exitus_bl
-    # robjects.globalenv["rank_trace"] = rank_trace
-    # robjects.globalenv["df_filtered"] = df_filtered
-    # mod = mgcv.gam("exitus_bl ~ s(age_nm) + rank_trace")
-    # x = df_filtered.loc[:, ~df_filtered.columns.str.contains('_dt|exitus_bl|id|atc|hospital_st|ccaa_cd')]
-    # y = df_filtered.loc[:, df_filtered.columns == 'exitus_bl']
-    # gam = LinearGAM(s(x.columns.get_loc('age_nm')) + l(x.columns.get_loc('period'))).fit(x, y)
     return df_filtered
 
 
@@ -695,8 +682,8 @@ Later, we built the gamm model:
 ```{r, warning=FALSE, output = FALSE}
 #| label: gamm model
 
-
-df_gam <- read.csv(file = './outputs/df_gam.csv', sep = '|') %>% dplyr::select(!contains(c('patient_id',"_dt", 'atc')))
+model_gam <- function(file){
+df_gam <- read.csv(file = file, sep = '|') %>% dplyr::select(!contains(c('patient_id',"_dt", 'atc')))
 df_gam$thrombolysis_emergency_bl <- as.integer(as.logical(df_gam$thrombolysis_emergency_bl))
 
 df_gam1 <- df_gam
@@ -724,7 +711,8 @@ par(mfrow = c(2, 2))
 gam.check(model)
 dev.off()
 
-
+return(model)
+}
 
 
 ```
@@ -969,6 +957,7 @@ The summary and plots for the gamm model are:
 
 ```{r, echo = FALSE, warning = FALSE}
 #| label: gamm model results
+model <- model_gam('./outputs/df_gam.csv')
 
 summary(model)
 
