@@ -24,12 +24,12 @@ regional Stroke Plans.
 ### Project structure
 ```shell
 .
-├── analysis_concept.html
 ├── analysis_concept.qmd
 ├── inputs
 │   └── synthetic_data_concept_stroke.csv
 ├── outputs
 │   ├── alpha_miner_petri_net.png
+│   ├── analysis_concept.html
 │   ├── barplot_features_importance.png
 │   ├── barplot_unique_traces.png
 │   ├── confusion_matrix_predictions_bupar.png
@@ -38,6 +38,7 @@ regional Stroke Plans.
 │   ├── df_gam.csv
 │   ├── directly_follows_graph_filtered.png
 │   ├── directly_follows_graph.png
+│   ├── event_log.csv
 │   ├── gam_model.png
 │   ├── heuristic_miner.png
 │   ├── inductive_miner_petri_net.png
@@ -45,6 +46,7 @@ regional Stroke Plans.
 │   ├── surv_analysis.png
 │   ├── workflow_net_filtered.png
 │   └── workflow_net.png
+├── _quarto.yml
 └── README.md
 
 ```
