@@ -6,7 +6,7 @@ CONCEPT-STROKE is a study analysing the acute care received by patients with acu
 ### CONCEPT Project Coordinator
 **[Enrique Bernal-Delgado MD PhD](https://orcid.org/0000-0002-0961-3298)**
 
-Lead Researche Senior Researcher in Healthcare Services and Policies.
+Lead Researcher Senior Researcher in Healthcare Services and Policies.
 
 Area of knowledge: Analysis of unjustified variations in healthcare performance. Comparative analysis of health systems. Methodology of research using real-world data.
 
