@@ -105,8 +105,12 @@ quarto render analysis_concept.qmd
 
 - Common Data Model: https://zenodo.org/record/8012966
 - Summary of the protocol: https://cienciadedatosysalud.org/wp-content/uploads/Resumen_CONCEPT_STROKE-1.pdf
-- Repository: https://github.com/cienciadedatosysalud/CONCEPT-STROKE
+
+## How to contribute
+
 - Issue tracker: https://github.com/cienciadedatosysalud/CONCEPT-STROKE/issues
+- Repository: https://github.com/cienciadedatosysalud/CONCEPT-STROKE
+
  
 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" ><img src="https://img.shields.io/badge/license-CC--BY%204.0-lightgrey" alt="License: CC-BY 4.0"></a>
 
