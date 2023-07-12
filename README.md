@@ -108,5 +108,5 @@ quarto render analysis_concept.qmd
 - Repository: https://github.com/cienciadedatosysalud/CONCEPT-STROKE
 - Issue tracker: https://github.com/cienciadedatosysalud/CONCEPT-STROKE/issues
  
-## Licensing
-CC BY 4.0 https://creativecommons.org/licenses/by/4.0/
+<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" ><img src="https://img.shields.io/badge/license-CC--BY%204.0-lightgrey" alt="License: CC-BY 4.0"></a>
+
