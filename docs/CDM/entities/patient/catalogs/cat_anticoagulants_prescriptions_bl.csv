@@ -1,0 +1,44 @@
+encoding,code,clean_code,description,type,subtype
+atc,B01A,B01A,ANTITHROMBOTIC AGENTS,atc,Anticoagulants
+atc,B01AA,B01AA,Vitamin K antagonists,atc,Anticoagulants
+atc,B01AA01,B01AA01,dicoumarol,atc,Anticoagulants
+atc,B01AA02,B01AA02,phenindione,atc,Anticoagulants
+atc,B01AA03,B01AA03,warfarin,atc,Anticoagulants
+atc,B01AA04,B01AA04,phenprocoumon,atc,Anticoagulants
+atc,B01AA07,B01AA07,acenocoumarol,atc,Anticoagulants
+atc,B01AA08,B01AA08,ethyl biscoumacetate,atc,Anticoagulants
+atc,B01AA09,B01AA09,clorindione,atc,Anticoagulants
+atc,B01AA10,B01AA10,diphenadione,atc,Anticoagulants
+atc,B01AA11,B01AA11,tioclomarol,atc,Anticoagulants
+atc,B01AA12,B01AA12,fluindione,atc,Anticoagulants
+atc,B01AB,B01AB,Heparin group,atc,Anticoagulants
+atc,B01AB01,B01AB01,heparin,atc,Anticoagulants
+atc,B01AB02,B01AB02,antithrombin III,atc,Anticoagulants
+atc,B01AB04,B01AB04,dalteparin,atc,Anticoagulants
+atc,B01AB05,B01AB05,enoxaparin,atc,Anticoagulants
+atc,B01AB06,B01AB06,nadroparin,atc,Anticoagulants
+atc,B01AB07,B01AB07,parnaparin,atc,Anticoagulants
+atc,B01AB08,B01AB08,reviparin,atc,Anticoagulants
+atc,B01AB09,B01AB09,danaparoid,atc,Anticoagulants
+atc,B01AB10,B01AB10,tinzaparin,atc,Anticoagulants
+atc,B01AB11,B01AB11,sulodexide,atc,Anticoagulants
+atc,B01AB12,B01AB12,bemiparin,atc,Anticoagulants
+atc,B01AB51,B01AB51,"heparin, combinations",atc,Anticoagulants
+atc,B01AE,B01AE,Direct thrombin inhibitors,atc,Anticoagulants
+atc,B01AE01,B01AE01,desirudin,atc,Anticoagulants
+atc,B01AE02,B01AE02,lepirudin,atc,Anticoagulants
+atc,B01AE03,B01AE03,argatroban,atc,Anticoagulants
+atc,B01AE04,B01AE04,melagatran,atc,Anticoagulants
+atc,B01AE05,B01AE05,ximelagatran,atc,Anticoagulants
+atc,B01AE06,B01AE06,bivalirudin,atc,Anticoagulants
+atc,B01AE07,B01AE07,dabigatran etexilate,atc,Anticoagulants
+atc,B01AF,B01AF,Direct factor Xa inhibitors,atc,Anticoagulants
+atc,B01AF01,B01AF01,rivaroxaban,atc,Anticoagulants
+atc,B01AF02,B01AF02,apixaban,atc,Anticoagulants
+atc,B01AF03,B01AF03,"""edoxaban",atc,Anticoagulants
+atc,B01AF04,B01AF04,betrixaban,atc,Anticoagulants
+atc,B01AX,B01AX,Other antithrombotic agents,atc,Anticoagulants
+atc,B01AX01,B01AX01,defibrotide,atc,Anticoagulants
+atc,B01AX04,B01AX04,dermatan sulfate,atc,Anticoagulants
+atc,B01AX05,B01AX05,fondaparinux,atc,Anticoagulants
+atc,B01AX07,B01AX07,caplacizumab,atc,Anticoagulants

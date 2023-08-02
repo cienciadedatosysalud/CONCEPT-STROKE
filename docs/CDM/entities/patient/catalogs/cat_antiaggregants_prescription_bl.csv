@@ -1,0 +1,28 @@
+encoding,code,clean_code,description,type,subtype
+atc,B01AC,B01AC,platelet aggregation inhibitors excl. heparin,atc,antiaggregants
+atc,B01AC01,B01AC01,ditazole,atc,antiaggregants
+atc,B01AC02,B01AC02,cloricromen,atc,antiaggregants
+atc,B01AC03,B01AC03,picotamide,atc,antiaggregants
+atc,B01AC04,B01AC04,clopidogrel,atc,antiaggregants
+atc,B01AC05,B01AC05,ticlopidine,atc,antiaggregants
+atc,B01AC06,B01AC06,acetylsalicylic acid,atc,antiaggregants
+atc,B01AC07,B01AC07,dipyridamole,atc,antiaggregants
+atc,B01AC08,B01AC08,carbasalate calcium,atc,antiaggregants
+atc,B01AC09,B01AC09,epoprostenol,atc,antiaggregants
+atc,B01AC10,B01AC10,indobufen,atc,antiaggregants
+atc,B01AC11,B01AC11,iloprost,atc,antiaggregants
+atc,B01AC13,B01AC13,abciximab,atc,antiaggregants
+atc,B01AC15,B01AC15,aloxiprin,atc,antiaggregants
+atc,B01AC16,B01AC16,eptifibatide,atc,antiaggregants
+atc,B01AC17,B01AC17,tirofiban,atc,antiaggregants
+atc,B01AC18,B01AC18,triflusal,atc,antiaggregants
+atc,B01AC19,B01AC19,beraprost,atc,antiaggregants
+atc,B01AC21,B01AC21,treprostinil,atc,antiaggregants
+atc,B01AC22,B01AC22,prasugrel,atc,antiaggregants
+atc,B01AC23,B01AC23,cilostazol,atc,antiaggregants
+atc,B01AC24,B01AC24,ticagrelor,atc,antiaggregants
+atc,B01AC25,B01AC25,cangrelor,atc,antiaggregants
+atc,B01AC26,B01AC26,vorapaxar,atc,antiaggregants
+atc,B01AC27,B01AC27,selexipag,atc,antiaggregants
+atc,B01AC30,B01AC30,combinations,atc,antiaggregants
+atc,B01AC56,B01AC56,"acetylsalicylic acid, combinations with proton pump inhibitors",atc,antiaggregants

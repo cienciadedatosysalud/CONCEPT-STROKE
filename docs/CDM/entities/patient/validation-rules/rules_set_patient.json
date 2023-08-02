@@ -1,0 +1,315 @@
+{
+    "description": "The expressions of the different rules follow the syntax of the SQL OLAP database \n        management system called DuckDB. For more information, visit https://duckdb.org/docs/sql/introduction. \n        Keep in mind that you only have to declare as a rule the statement that would follow a WHERE clause. \n        e.g.,  Select * from people WHERE {expression}\n        expression = age >= 18\n        ",
+    "rules": [
+        {
+            "expression": "age_nm BETWEEN 18 AND 115",
+            "name": "age_nm",
+            "description": "Rule for column age_nm"
+        },
+        {
+            "expression": "sex_cd IN ('0', '1', '2', '9')",
+            "name": "sex_cd",
+            "description": "Rule for column sex_cd"
+        },
+        {
+            "expression": "type_admission_cd IN ('1', '2')",
+            "name": "type_admission_cd",
+            "description": "Rule for column type_admission_cd"
+        },
+        {
+            "expression": "hospital_admission_date_dt BETWEEN ''2010-01-01'' AND ''2020-12-31''",
+            "name": "hospital_admission_date_dt",
+            "description": "Rule for column hospital_admission_date_dt"
+        },
+        {
+            "expression": "hospital_admission_date_dt <= exitus_dt",
+            "name": "hospital_admission_date_dt",
+            "description": "Rule for column hospital_admission_date_dt"
+        },
+        {
+            "expression": "hospital_intervention_date_dt >= hospital_admission_date_dt",
+            "name": "hospital_intervention_date_dt",
+            "description": "Rule for column hospital_intervention_date_dt"
+        },
+        {
+            "expression": "hospital_intervention_date_dt <= exitus_dt",
+            "name": "hospital_intervention_date_dt",
+            "description": "Rule for column hospital_intervention_date_dt"
+        },
+        {
+            "expression": "hospital_discharge_date_dt >= hospital_intervention_date_dt",
+            "name": "hospital_discharge_date_dt",
+            "description": "Rule for column hospital_discharge_date_dt"
+        },
+        {
+            "expression": "hospital_discharge_date_dt <= exitus_dt",
+            "name": "hospital_discharge_date_dt",
+            "description": "Rule for column hospital_discharge_date_dt"
+        },
+        {
+            "expression": "hospital_type_discharge_cd IN ('1', '2', '3', '4', '5', '8', '9')",
+            "name": "hospital_type_discharge_cd",
+            "description": "Rule for column hospital_type_discharge_cd"
+        },
+        {
+            "expression": "inhospital_trombectomy_bl IN ('0', '1')",
+            "name": "inhospital_trombectomy_bl",
+            "description": "Rule for column inhospital_trombectomy_bl"
+        },
+        {
+            "expression": "inhospital_fibrinolysis_bl IN ('0', '1')",
+            "name": "inhospital_fibrinolysis_bl",
+            "description": "Rule for column inhospital_fibrinolysis_bl"
+        },
+        {
+            "expression": "type_ischemic_stroke_bl IN ('0', '1')",
+            "name": "type_ischemic_stroke_bl",
+            "description": "Rule for column type_ischemic_stroke_bl"
+        },
+        {
+            "expression": "socioeconomic_level_cd IN ('1', '2', '3', '4', '5', '6', '7', '8')",
+            "name": "socioeconomic_level_cd",
+            "description": "Rule for column socioeconomic_level_cd"
+        },
+        {
+            "expression": "admission_emergency_care_dt BETWEEN ''2010-01-01'' AND ''2020-12-31''",
+            "name": "admission_emergency_care_dt",
+            "description": "Rule for column admission_emergency_care_dt"
+        },
+        {
+            "expression": "admission_emergency_care_dt <= exitus_dt",
+            "name": "admission_emergency_care_dt",
+            "description": "Rule for column admission_emergency_care_dt"
+        },
+        {
+            "expression": "triage_emergency_care_dt >= admission_emergency_care_dt",
+            "name": "triage_emergency_care_dt",
+            "description": "Rule for column triage_emergency_care_dt"
+        },
+        {
+            "expression": "first_asisstance_medical_dt >= triage_emergency_care_dt",
+            "name": "first_asisstance_medical_dt",
+            "description": "Rule for column first_asisstance_medical_dt"
+        },
+        {
+            "expression": "admission_to_observation_ward_dt >= first_asisstance_medical_dt",
+            "name": "admission_to_observation_ward_dt",
+            "description": "Rule for column admission_to_observation_ward_dt"
+        },
+        {
+            "expression": "internal_neurology_consultation_dt >= admission_to_observation_ward_dt",
+            "name": "internal_neurology_consultation_dt",
+            "description": "Rule for column internal_neurology_consultation_dt"
+        },
+        {
+            "expression": "ct_mri_dt >= internal_neurology_consultation_dt",
+            "name": "ct_mri_dt",
+            "description": "Rule for column ct_mri_dt"
+        },
+        {
+            "expression": "ct_inhospital_bl IN ('0', '1')",
+            "name": "ct_inhospital_bl",
+            "description": "Rule for column ct_inhospital_bl"
+        },
+        {
+            "expression": "mri_inhospital_bl IN ('0', '1')",
+            "name": "mri_inhospital_bl",
+            "description": "Rule for column mri_inhospital_bl"
+        },
+        {
+            "expression": "thrombolysis_emergency_dt >= ct_mri_dt",
+            "name": "thrombolysis_emergency_dt",
+            "description": "Rule for column thrombolysis_emergency_dt"
+        },
+        {
+            "expression": "discharge_from_emergency_dt >= thrombolysis_emergency_dt",
+            "name": "discharge_from_emergency_dt",
+            "description": "Rule for column discharge_from_emergency_dt"
+        },
+        {
+            "expression": "type_discharge_emergency_bl IN ('0', '1')",
+            "name": "type_discharge_emergency_bl",
+            "description": "Rule for column type_discharge_emergency_bl"
+        },
+        {
+            "expression": "n_readmissions_30days_all_cause_bl IN ('0', '1')",
+            "name": "n_readmissions_30days_all_cause_bl",
+            "description": "Rule for column n_readmissions_30days_all_cause_bl"
+        },
+        {
+            "expression": "anticoagulants_prescriptions_bl IN ('0', '1')",
+            "name": "anticoagulants_prescriptions_bl",
+            "description": "Rule for column anticoagulants_prescriptions_bl"
+        },
+        {
+            "expression": "start_date_prescription_anticoagulants_dt BETWEEN ''2010-01-01'' AND ''2020-12-31''",
+            "name": "start_date_prescription_anticoagulants_dt",
+            "description": "Rule for column start_date_prescription_anticoagulants_dt"
+        },
+        {
+            "expression": "start_date_prescription_anticoagulants_dt <= exitus_dt",
+            "name": "start_date_prescription_anticoagulants_dt",
+            "description": "Rule for column start_date_prescription_anticoagulants_dt"
+        },
+        {
+            "expression": "end_date_prescription_anticoagulants_dt > start_date_prescription_anticoagulants_dt",
+            "name": "end_date_prescription_anticoagulants_dt",
+            "description": "Rule for column end_date_prescription_anticoagulants_dt"
+        },
+        {
+            "expression": "end_date_prescription_anticoagulants_dt <= exitus_dt",
+            "name": "end_date_prescription_anticoagulants_dt",
+            "description": "Rule for column end_date_prescription_anticoagulants_dt"
+        },
+        {
+            "expression": "antiarrhythmics_prescription_bl IN ('0', '1')",
+            "name": "antiarrhythmics_prescription_bl",
+            "description": "Rule for column antiarrhythmics_prescription_bl"
+        },
+        {
+            "expression": "start_date_prescription_anticarrthymic_dt BETWEEN ''2010-01-01'' AND ''2020-12-31''",
+            "name": "start_date_prescription_anticarrthymic_dt",
+            "description": "Rule for column start_date_prescription_anticarrthymic_dt"
+        },
+        {
+            "expression": "start_date_prescription_anticarrthymic_dt <= exitus_dt",
+            "name": "start_date_prescription_anticarrthymic_dt",
+            "description": "Rule for column start_date_prescription_anticarrthymic_dt"
+        },
+        {
+            "expression": "end_date_prescription_anticarrthymic_dt > start_date_prescription_anticarrthymic_dt",
+            "name": "end_date_prescription_anticarrthymic_dt",
+            "description": "Rule for column end_date_prescription_anticarrthymic_dt"
+        },
+        {
+            "expression": "end_date_prescription_anticarrthymic_dt <= exitus_dt",
+            "name": "end_date_prescription_anticarrthymic_dt",
+            "description": "Rule for column end_date_prescription_anticarrthymic_dt"
+        },
+        {
+            "expression": "antihypertensive_prescription_bl IN ('0', '1')",
+            "name": "antihypertensive_prescription_bl",
+            "description": "Rule for column antihypertensive_prescription_bl"
+        },
+        {
+            "expression": "start_date_prescription_antihypertensive_dt BETWEEN ''2010-01-01'' AND ''2020-12-31''",
+            "name": "start_date_prescription_antihypertensive_dt",
+            "description": "Rule for column start_date_prescription_antihypertensive_dt"
+        },
+        {
+            "expression": "start_date_prescription_antihypertensive_dt <= exitus_dt",
+            "name": "start_date_prescription_antihypertensive_dt",
+            "description": "Rule for column start_date_prescription_antihypertensive_dt"
+        },
+        {
+            "expression": "end_date_prescription_antihypertensive_dt > start_date_prescription_antihypertensive_dt",
+            "name": "end_date_prescription_antihypertensive_dt",
+            "description": "Rule for column end_date_prescription_antihypertensive_dt"
+        },
+        {
+            "expression": "end_date_prescription_antihypertensive_dt <= exitus_dt",
+            "name": "end_date_prescription_antihypertensive_dt",
+            "description": "Rule for column end_date_prescription_antihypertensive_dt"
+        },
+        {
+            "expression": "antiaggregants_prescription_bl IN ('0', '1')",
+            "name": "antiaggregants_prescription_bl",
+            "description": "Rule for column antiaggregants_prescription_bl"
+        },
+        {
+            "expression": "start_date_prescription_antiaggregants_dt BETWEEN ''2010-01-01'' AND ''2020-12-31''",
+            "name": "start_date_prescription_antiaggregants_dt",
+            "description": "Rule for column start_date_prescription_antiaggregants_dt"
+        },
+        {
+            "expression": "start_date_prescription_antiaggregants_dt <= exitus_dt",
+            "name": "start_date_prescription_antiaggregants_dt",
+            "description": "Rule for column start_date_prescription_antiaggregants_dt"
+        },
+        {
+            "expression": "end_date_prescription_antiaggregants_dt > start_date_prescription_antiaggregants_dt",
+            "name": "end_date_prescription_antiaggregants_dt",
+            "description": "Rule for column end_date_prescription_antiaggregants_dt"
+        },
+        {
+            "expression": "end_date_prescription_antiaggregants_dt <= exitus_dt",
+            "name": "end_date_prescription_antiaggregants_dt",
+            "description": "Rule for column end_date_prescription_antiaggregants_dt"
+        },
+        {
+            "expression": "fibrinolitics_prescriptions_bl IN ('0', '1')",
+            "name": "fibrinolitics_prescriptions_bl",
+            "description": "Rule for column fibrinolitics_prescriptions_bl"
+        },
+        {
+            "expression": "nihss_score_nm IN ('1', '2', '3', '4', '5')",
+            "name": "nihss_score_nm",
+            "description": "Rule for column nihss_score_nm"
+        },
+        {
+            "expression": "nihss_score_date_dt = first_asisstance_medical_dt",
+            "name": "nihss_score_date_dt",
+            "description": "Rule for column nihss_score_date_dt"
+        },
+        {
+            "expression": "modified_rankin_scale_cd IN ('0', '1', '2', '3', '4', '5', '6', '7', '8')",
+            "name": "modified_rankin_scale_cd",
+            "description": "Rule for column modified_rankin_scale_cd"
+        },
+        {
+            "expression": "modified_rankin_scale_dt = first_asisstance_medical_dt",
+            "name": "modified_rankin_scale_dt",
+            "description": "Rule for column modified_rankin_scale_dt"
+        },
+        {
+            "expression": "barthel_index_nm IN ('1', '2', '3', '4', '5')",
+            "name": "barthel_index_nm",
+            "description": "Rule for column barthel_index_nm"
+        },
+        {
+            "expression": "barthel_index_dt = first_asisstance_medical_dt",
+            "name": "barthel_index_dt",
+            "description": "Rule for column barthel_index_dt"
+        },
+        {
+            "expression": "exitus_bl IN ('0', '1')",
+            "name": "exitus_bl",
+            "description": "Rule for column exitus_bl"
+        },
+        {
+            "expression": "heart_failure_bl IN ('0', '1')",
+            "name": "heart_failure_bl",
+            "description": "Rule for column heart_failure_bl"
+        },
+        {
+            "expression": "hypertension_bl IN ('0', '1')",
+            "name": "hypertension_bl",
+            "description": "Rule for column hypertension_bl"
+        },
+        {
+            "expression": "diabetes_bl IN ('0', '1')",
+            "name": "diabetes_bl",
+            "description": "Rule for column diabetes_bl"
+        },
+        {
+            "expression": "atrial_fibrillation_bl IN ('0', '1')",
+            "name": "atrial_fibrillation_bl",
+            "description": "Rule for column atrial_fibrillation_bl"
+        },
+        {
+            "expression": "valvular_disease_bl IN ('0', '1')",
+            "name": "valvular_disease_bl",
+            "description": "Rule for column valvular_disease_bl"
+        },
+        {
+            "expression": "hospital_icu_admission_bl IN ('0', '1')",
+            "name": "hospital_icu_admission_bl",
+            "description": "Rule for column hospital_icu_admission_bl"
+        },
+        {
+            "expression": "hospital_icu_stay >= 0",
+            "name": "hospital_icu_stay",
+            "description": "Rule for column hospital_icu_stay"
+        }
+    ]
+}

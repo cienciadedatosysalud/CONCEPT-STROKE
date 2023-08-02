@@ -1,0 +1,46 @@
+encoding,code,clean_code,description,type,subtype
+atc,C02,C02,antihypertensives,atc,antihypertensives
+atc,C02A,C02A,Centrally acting antiadrenergic drugs,atc,antihypertensives
+atc,C02AA,C02AA,Rauwolfia alkaloids,atc,antihypertensives
+atc,C02AA01,C02AA01,rescinnamine,atc,antihypertensives
+atc,C02AA02,C02AA02,reserpine,atc,antihypertensives
+atc,C02AA03,C02AA03,combinations of rauwolfia alkaloids,atc,antihypertensives
+atc,C02AA04,C02AA04,"rauwolfia alkaloids, whole root",atc,antihypertensives
+atc,C02AA05,C02AA05,deserpidine,atc,antihypertensives
+atc,C02AA06,C02AA06,methoserpidine,atc,antihypertensives
+atc,C02AA07,C02AA07,bietaserpine,atc,antihypertensives
+atc,C02AA52,C02AA52,"reserpine, combinations",atc,antihypertensives
+atc,C02AA53,C02AA53,"combinations of rauwolfia alkoloids, combinations",atc,antihypertensives
+atc,C02AA57,C02AA57,"bietaserpine, combinations",atc,antihypertensives
+atc,C02B,C02B,"ANTIADRENERGIC AGENTS, GANGLION-BLOCKING",atc,antihypertensives
+atc,C02BA,C02BA,Sulfonium derivatives,atc,antihypertensives
+atc,C02BA01,C02BA01,trimetaphan,atc,antihypertensives
+atc,C02BB,C02BB,Secondary and tertiary amines,atc,antihypertensives
+atc,C02BB01,C02BB01,mecamylamine,atc,antihypertensives
+atc,C02BC,C02BC,Bisquaternary ammonium compounds,atc,antihypertensives
+atc,C02C,C02C,"ANTIADRENERGIC AGENTS, PERIPHERALLY ACTING",atc,antihypertensives
+atc,C02CA,C02CA,Alpha-adrenoreceptor antagonists,atc,antihypertensives
+atc,C02CA01,C02CA01,prazosin,atc,antihypertensives
+atc,C02CA02,C02CA02,indoramin,atc,antihypertensives
+atc,C02CA03,C02CA03,trimazosin,atc,antihypertensives
+atc,C02CA04,C02CA04,doxazosin,atc,antihypertensives
+atc,C02CA06,C02CA06,urapidil,atc,antihypertensives
+atc,C02CC,C02CC,Guanidine derivatives,atc,antihypertensives
+atc,C02CC01,C02CC01,betanidine,atc,antihypertensives
+atc,C02CC02,C02CC02,guanethidine,atc,antihypertensives
+atc,C02CC03,C02CC03,guanoxan,atc,antihypertensives
+atc,C02CC04,C02CC04,debrisoquine,atc,antihypertensives
+atc,C02CC05,C02CC05,guanoclor,atc,antihypertensives
+atc,C02CC06,C02CC06,guanazodine,atc,antihypertensives
+atc,C02CC07,C02CC07,guanoxabenz,atc,antihypertensives
+atc,C02D,C02D,Agents acting on the arteriolar smooth muscle,atc,antihypertensives
+atc,C02DA,C02DA,Thiazide derivatives,atc,antihypertensives
+atc,C02DB,C02DB,Hydrazinophthalazine derivatives,atc,antihypertensives
+atc,C02DB01,C02DB01,dihydralazine,atc,antihypertensives
+atc,C02DB02,C02DB02,hydralazine,atc,antihypertensives
+atc,C02DB03,C02DB03,endralazine,atc,antihypertensives
+atc,C02DB04,C02DB04,cadralazine,atc,antihypertensives
+atc,C02DC,C02DC,Pyrimidine derivatives,atc,antihypertensives
+atc,C02DC01,C02DC01,Monoxidil,atc,antihypertensives
+atc,C02DD,C02DD,Nitroferricyanide derivatives,atc,antihypertensives
+atc,C02DD01,C02DD01,Nitroprusside,atc,antihypertensives

@@ -1,0 +1,14 @@
+encoding,code,clean_code,description,type,subtype
+atc,B01AD,B01AD,Enzymes,atc,fibrinolitics
+atc,B01AD01,B01AD01,streptokinase,atc,fibrinolitics
+atc,B01AD02,B01AD02,alteplase,atc,fibrinolitics
+atc,B01AD03,B01AD03,anistreplase,atc,fibrinolitics
+atc,B01AD04,B01AD04,urokinase,atc,fibrinolitics
+atc,B01AD05,B01AD05,fibrinolysin,atc,fibrinolitics
+atc,B01AD06,B01AD06,brinase,atc,fibrinolitics
+atc,B01AD07,B01AD07,reteplase,atc,fibrinolitics
+atc,B01AD08,B01AD08,saruplase,atc,fibrinolitics
+atc,B01AD09,B01AD09,ancrod,atc,fibrinolitics
+atc,B01AD10,B01AD10,drotrecogin alfa (activated),atc,fibrinolitics
+atc,B01AD11,B01AD11,tenecteplase,atc,fibrinolitics
+atc,B01AD12,B01AD12,protein C,atc,fibrinolitics

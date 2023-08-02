@@ -2,7 +2,7 @@
     "description": "<p><strong>CONCEPT-STROKE&nbsp;</strong><br>\nCONCEPT-STROKE is a study analysing the acute care received by patients with acute ischaemic stroke where the general aim is to estimate the effectiveness and efficiency of the care pathway followed by acute ischaemic stroke patients, using Real World Data (RWD) routinely collected by five Spanish Regional Health Systems.</p>\n\n<p><strong>CONCEPT Project Coordinator</strong><br>\nEnrique Bernal-Delgado MD PhD (https://orcid.org/0000-0002-0961-3298)</p>\n\n<p>Lead Researcher Senior Researcher in Healthcare Services and Policies.</p>\n\n<p>Area of knowledge: Analysis of unjustified variations in healthcare performance. Comparative analysis of health systems. Methodology of research using real-world data.</p>\n\n<p><br>\n<strong>Main specific aims</strong>:</p>\n\n<ul>\n\t<li>To discover the actual care pathway of Acute Ischemic Stroke, from the admission to an emergency room in a public hospital to the appearance of an event of interest after discharge.&nbsp;</li>\n\t<li>To compare that care pathway discovered with the theoretical pathway that a patient should follow according to the&nbsp;regional Stroke Plans.</li>\n\t<li>To analyse the impact of specific care interventions within and across care paths, in terms of patients survival.</li>\n\t<li>To compare the traditional analytical methods with process mining methods in terms of modeling quality, prediction performance and information provided.</li>\n</ul>", 
     "license": "other-open", 
     "title": "CONCEPT-STROKE: CONCEPT-STROKE - Analytical pipeline", 
-    "version": "1.0.0", 
+    "version": "2.0.0", 
     "upload_type": "software", 
     "publication_date": "2023-07-27", 
     "creators": [

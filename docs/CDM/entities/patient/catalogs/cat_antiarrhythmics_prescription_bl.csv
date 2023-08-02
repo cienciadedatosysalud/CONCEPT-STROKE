@@ -1,0 +1,32 @@
+encoding,code,clean_code,description,type,subtype
+atc,C01B,C01B,"ANTIARRHYTHMICS, CLASS I AND III",atc,antiarrhythmics
+atc,C01BA,C01BA,"Antiarrhythmics, class Ia",atc,antiarrhythmics
+atc,C01BA01,C01BA01,quinidine,atc,antiarrhythmics
+atc,C01BA02,C01BA02,procainamide,atc,antiarrhythmics
+atc,C01BA03,C01BA03,disopyramide,atc,antiarrhythmics
+atc,C01BA04,C01BA04,sparteine,atc,antiarrhythmics
+atc,C01BA05,C01BA05,ajmaline,atc,antiarrhythmics
+atc,C01BA08,C01BA08,prajmaline,atc,antiarrhythmics
+atc,C01BA12,C01BA12,lorajmine,atc,antiarrhythmics
+atc,C01BA13,C01BA13,hydroquinidine,atc,antiarrhythmics
+atc,C01BA51,C01BA51,"quinidine, combinations excl. psycholeptics",atc,antiarrhythmics
+atc,C01BA71,C01BA71,"quinidine, combinations with psycholeptics",atc,antiarrhythmics
+atc,C01BB,C01BB,"Antiarrhythmics, class Ib",atc,antiarrhythmics
+atc,C01BB01,C01BB01,lidocaine,atc,antiarrhythmics
+atc,C01BB02,C01BB02,mexiletine,atc,antiarrhythmics
+atc,C01BB03,C01BB03,tocainide,atc,antiarrhythmics
+atc,C01BB04,C01BB04,aprindine,atc,antiarrhythmics
+atc,C01BC,C01BC,"Antiarrhythmics, class Ic",atc,antiarrhythmics
+atc,C01BC03,C01BC03,propafenone,atc,antiarrhythmics
+atc,C01BC04,C01BC04,flecainide,atc,antiarrhythmics
+atc,C01BC07,C01BC07,lorcainide,atc,antiarrhythmics
+atc,C01BC08,C01BC08,encainide,atc,antiarrhythmics
+atc,C01BC09,C01BC09,ethacizine,atc,antiarrhythmics
+atc,C01BD,C01BD,"Antiarrhythmics, class III",atc,antiarrhythmics
+atc,C01BD01,C01BD01,amiodarone,atc,antiarrhythmics
+atc,C01BD02,C01BD02,bretylium tosilate,atc,antiarrhythmics
+atc,C01BD03,C01BD03,bunaftine,atc,antiarrhythmics
+atc,C01BD04,C01BD04,dofetilide,atc,antiarrhythmics
+atc,C01BD05,C01BD05,ibutilide,atc,antiarrhythmics
+atc,C01BD06,C01BD06,tedisamil,atc,antiarrhythmics
+atc,C01BD07,C01BD07,dronedarone,atc,antiarrhythmics

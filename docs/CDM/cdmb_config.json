@@ -1,0 +1,1473 @@
+{
+    "created_dt": "20230801082735_cdmb",
+    "uuid": "994959c4-7706-49ba-b075-89bdd018da35",
+    "metadata": {
+        "uuid": "f3db8f74-ec5e-4f45-ac9b-517768ac78dd",
+        "project": "CONCEPT-STROKE",
+        "funder": "This project has received funding from the Instituto de Salud Carlos III under grant agreement (PI19/00154; PI19/00306; PI19/00381; PI19/00056; PI 20/00783). The project also received a research grant from Instituto de Salud Carlos III, Ministry of Science and Innovation (Spain), awarded on thecall for the creation of Health Outcomes-Oriented Cooperative Research Networks (RICORS), with reference RD21/0016/0016, co-funded with European Union – NextGenerationEU funds.",
+        "url_project": "https://atlasvpm.org/concept-demo/#_ftn1",
+        "work_package": "WP1",
+        "use_case": "CONCEPT-STROKE",
+        "document": "",
+        "version_sem": "1.2.2",
+        "authors": [
+            {
+                "name": "Martínez-Lizaga, Natalia",
+                "affiliation": "Institute for Health Sciences in Aragon (IACS)",
+                "id": "0000-0002-9586-7955"
+            },
+            {
+                "name": "Estupiñan-Romero, Francisco",
+                "affiliation": "Institute for Health Sciences in Aragon (IACS)",
+                "id": "0000-0002-6285-8120"
+            },
+            {
+                "name": "Royo-Sierra, Santiago",
+                "affiliation": "Institute for Health Sciences in Aragon (IACS)",
+                "id": "0000-0002-0048-4370"
+            },
+            {
+                "name": "González-Galindo, Javier",
+                "affiliation": "Institute for Health Sciences in Aragon (IACS)",
+                "id": "0000-0002-8783-5478"
+            },
+            {
+                "name": "Bernal-Delgado, Enrique",
+                "affiliation": "Institute for Health Sciences in Aragon (IACS)",
+                "id": "0000-0002-0961-3298"
+            }
+        ],
+        "keywords": [
+            "Acute ischaemic stroke",
+            "Health services research",
+            "Process mining",
+            "Common Data Model",
+            "Hospital admissions",
+            "Synthetic data",
+            "CONCEPT-STROKE"
+        ],
+        "description": "Data model specification documenting both individual-level data required to respond to the project's research question about the care pathway followed by acute ischaemic stroke patients. The data model specification includes the cohort definition, individual-level variable specification including data dictionaries and crosswalks for semantic interoperable definition of certain variables (i.e. health status, clinical conditions and comorbidities - (def)). See below some of the conventions used to document this data model.",
+        "notes": "1.0.0\tFirst iteration of the common data model specification. Entities and variable descriptions based on the STROKE-ICTUS protocol common data model\n1.1.0\tAdded description and selection criteria for Acute Stroke, thrombectomy and fibrinolysis cohorts\n1.1.1\tStroke, thrombectomy and fibrinolysis selection criteria are refined\n1.2.0\tMajor changes regarding including new prescripcion considering fibrinolitics in primary care and new comorbidity definition considering cardiac valvular disease (Elixhauser), and update in comorbidities definition and crosswalks to icp-1 /2 (i.e. ciap-1/2  in Spanish)\n1.2.1\tMinor changes regarding 'individual_level_data_model' specification completion and consistency checks with definitions\n1.2.2\tThe following variables have been removed: ‘emergency_care_exitus_dt’, ‘start_date_prescription_fibrinolitics_dt’, ‘end_date_prescription_fibrinolitics_dt’, ‘hospital_icu_admission_dt’. ‘hospital_icu_stay’ variable has been added. Typo corrections in some variables.",
+        "spatial_coverage": "",
+        "license": "CC BY 4.0 https://creativecommons.org/licenses/by/4.0/"
+    },
+    "cohort": {
+        "name": "CONCEPT-STROKE",
+        "description": "Patients admitted to hospital due to acute ischemic stroke.",
+        "inclusion_criteria": "Patients 18 years or older admitted to emergency care services (or with an unplanned admission to hospital) with a principal diagnosis of acute ischemic stroke (AIS) during the study period",
+        "exclusion_criteria": "Patients 17 years or younger; Patients with a diagnosis of acute hemorragic stroke or with other non-specific stroke diagnoses (i.e. transient ischemic attack - TIA)",
+        "beggining_study_period": "2010-01-01",
+        "end_study_period": "2020-12-31",
+        "cohort_definition_inclusion": {
+            "filename": "cat_type_ischemic_stroke_bl.csv",
+            "nature": "Condition",
+            "column_name": "clean_code"
+        },
+        "cohort_definition_exclusion": null
+    },
+    "entities": [
+        {
+            "uuid": "2321e07b-0545-4ca7-a5f4-7e08e33a34a9",
+            "name": "patient",
+            "time_varying": false,
+            "variables": [
+                {
+                    "label": "patient_id",
+                    "description": "pseudoid of the person included in the cohort",
+                    "standard_classification": "utf-8",
+                    "format": "String",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "BDU",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "hospital_cd",
+                    "description": "hospital code",
+                    "standard_classification": "",
+                    "format": "String",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": true,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "ESRI",
+                    "observations_comments": "https://www.sanidad.gob.es/ciudadanos/prestaciones/centrosServiciosSNS/hospitales/home.htm",
+                    "examples": "",
+                    "catalog": {
+                        "column_name": "codcnh",
+                        "filename": "cat_cch.csv"
+                    }
+                },
+                {
+                    "label": "hospital_st",
+                    "description": "hospital name",
+                    "standard_classification": "",
+                    "format": "String",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "CMBD",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "ccaa_cd",
+                    "description": "area of residence of the person included in the cohort (nuts 2) (at the time of entering the cohort)",
+                    "standard_classification": "NUTS 2021 codes",
+                    "format": "String",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": true,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "BDU",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": {
+                        "column_name": "nuts2",
+                        "filename": "cat_nuts2_spain.csv"
+                    }
+                },
+                {
+                    "label": "healthcare_area_cd",
+                    "description": "healthcare area of residence of the patient",
+                    "standard_classification": "",
+                    "format": "String",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "BDU",
+                    "observations_comments": "Map to Atlas VPM healthcare area codes",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "age_nm",
+                    "description": "age of the patient included in the cohort (at the time of entering the cohort)",
+                    "standard_classification": "",
+                    "format": "Integer",
+                    "type": "Numerical",
+                    "units": "years",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "BDU",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "sex_cd",
+                    "description": "sex of the patient included in the cohort (at the time of entering the cohort)",
+                    "standard_classification": "ISO/IEC 5218",
+                    "format": "Integer",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "BDU",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "municipality_code_cd",
+                    "description": "municipality code of patient's residence",
+                    "standard_classification": "",
+                    "format": "Integer",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": true,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "",
+                    "observations_comments": "BDU",
+                    "examples": "",
+                    "catalog": {
+                        "column_name": "municipio_cd",
+                        "filename": "cat_municipios.csv"
+                    }
+                },
+                {
+                    "label": "zip_code_cd",
+                    "description": "zip code of patient's residence",
+                    "standard_classification": "",
+                    "format": "Integer",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": true,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "BDU",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": {
+                        "column_name": "codigo_postal",
+                        "filename": "cat_zipcode.csv"
+                    }
+                },
+                {
+                    "label": "type_admission_cd",
+                    "description": "type of admission",
+                    "standard_classification": "",
+                    "format": "Integer",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "CMBD",
+                    "observations_comments": "R.D. 69/2015 (https://www.boe.es/buscar/act.php?id=BOE-A-2015-1235)",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "hospital_admission_date_dt",
+                    "description": "date of hospital admission",
+                    "standard_classification": "ISO 8601",
+                    "format": "Date",
+                    "type": "Date",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "CMBD",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "hospital_intervention_date_dt",
+                    "description": "date of main intervention (surgery)",
+                    "standard_classification": "ISO 8601",
+                    "format": "Date",
+                    "type": "Date",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "CMBD",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "hospital_discharge_date_dt",
+                    "description": "date of discharge from hospital",
+                    "standard_classification": "ISO 8601",
+                    "format": "Date",
+                    "type": "Date",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "CMBD",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "hospital_type_discharge_cd",
+                    "description": "type of hospital discharge",
+                    "standard_classification": "",
+                    "format": "Integer",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "CMBD",
+                    "observations_comments": "R.D. 69/2015 (https://www.boe.es/buscar/act.php?id=BOE-A-2015-1235)",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "inhospital_trombectomy_bl",
+                    "description": "performance of procedure in hospital episode: mechanical endovascular thrombectomy",
+                    "standard_classification": "",
+                    "format": "Boolean",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "CMBD",
+                    "observations_comments": "see definition for intervention in 'mechanical_thombectomy_def' tab",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "inhospital_fibrinolysis_bl",
+                    "description": "performance of procedure in hospital episode: fibrinolysis",
+                    "standard_classification": "",
+                    "format": "Boolean",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "CMBD",
+                    "observations_comments": "see definition of fibrinolysis in 'inhospital_fibrinolysis_bl_def' tab",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "type_ischemic_stroke_bl",
+                    "description": "characterization of the type of ischemic stroke by etiology",
+                    "standard_classification": "",
+                    "format": "Boolean",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "CMBD",
+                    "observations_comments": "see classification of type of stroke in 'ischemic_stroke_def' tab",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "socioeconomic_level_cd",
+                    "description": "socioeconomic group (approximated through the level of pharmaceutical co-payment)",
+                    "standard_classification": "",
+                    "format": "String",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Optional",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "BDU",
+                    "observations_comments": "R.D. 1718/2010 (https://www.boe.es/buscar/act.php?id=BOE-A-2012-5403)",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "admission_emergency_care_dt",
+                    "description": "date and time of admission to the emergency (admission)",
+                    "standard_classification": "ISO 8601",
+                    "format": "Date",
+                    "type": "Date",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "PCH-URG",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "triage_emergency_care_dt",
+                    "description": "date and time of emergency triage",
+                    "standard_classification": "ISO 8601",
+                    "format": "Date",
+                    "type": "Date",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "PCH-URG",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "first_asisstance_medical_dt",
+                    "description": "date and time of first medical assistance in the emergency",
+                    "standard_classification": "ISO 8601",
+                    "format": "Date",
+                    "type": "Date",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "PCH-URG",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "admission_to_observation_ward_dt",
+                    "description": "date and time of transfer to the observation room in the emergency",
+                    "standard_classification": "ISO 8601",
+                    "format": "Date",
+                    "type": "Date",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "PCH-URG",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "internal_neurology_consultation_dt",
+                    "description": "date and time of neurology interconsultation",
+                    "standard_classification": "ISO 8601",
+                    "format": "Date",
+                    "type": "Date",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "PCH-URG",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "ct_mri_dt",
+                    "description": "date and time of ct/mri (medical imaging test)",
+                    "standard_classification": "ISO 8601",
+                    "format": "Date",
+                    "type": "Date",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "RIS",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "ct_inhospital_bl",
+                    "description": "performance of procedure inhospital episode: ct head/neck",
+                    "standard_classification": "",
+                    "format": "Boolean",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "CMBD",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "mri_inhospital_bl",
+                    "description": "performance of procedure inhospital episode: mri head/neck",
+                    "standard_classification": "",
+                    "format": "Boolean",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "CMBD",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "thrombolysis_emergency_dt",
+                    "description": "date and time of procedure performed in emergency episode: thrombolysis (i.e., fibrinolysis)",
+                    "standard_classification": "ISO 8601",
+                    "format": "Date",
+                    "type": "Date",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "PCH-URG",
+                    "observations_comments": "see definition of fibrinolysis in 'inhospital_fibrinolysis_bl_def' tab",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "discharge_from_emergency_dt",
+                    "description": "date and time of discharge from emergency",
+                    "standard_classification": "ISO 8601",
+                    "format": "Date",
+                    "type": "Date",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "PCH-URG",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "type_discharge_emergency_bl",
+                    "description": "type of discharge from emergency",
+                    "standard_classification": "",
+                    "format": "Boolean",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Recommended",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "PCH-URG",
+                    "observations_comments": "R.D. 69/2015 (https://www.boe.es/buscar/pdf/2015/BOE-A-2015-1235-consolidado.pdf)",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "exitus_dt",
+                    "description": "date of death ",
+                    "standard_classification": "ISO 8601",
+                    "format": "Date",
+                    "type": "Date",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "BDU",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "n_admission_prior_emergency_nm",
+                    "description": "number of admissions prior to the index case in emergency",
+                    "standard_classification": "ICPC",
+                    "format": "Integer",
+                    "type": "Numerical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "PCH-URG",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "n_admission_prior_inhospital_nm",
+                    "description": "number of admissions prior to the index case in the hospital",
+                    "standard_classification": "ICPC",
+                    "format": "Integer",
+                    "type": "Numerical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "CMBD",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "date_first_readmissions_30days_all_cause_dt",
+                    "description": "date of first all-cause readmission within 30 days of discharge from index hospital case",
+                    "standard_classification": "ISO 8601",
+                    "format": "Date",
+                    "type": "Date",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "CMBD",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "n_readmissions_30days_all_cause_bl",
+                    "description": "number of all-cause readmissions within 30 days of discharge from the index inpatient case",
+                    "standard_classification": "ICPC",
+                    "format": "Boolean",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "CMBD",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "anticoagulants_prescriptions_bl",
+                    "description": "prescription in primary care (outpatient) of drugs: anticoagulants",
+                    "standard_classification": "",
+                    "format": "Boolean",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "E-RECETA",
+                    "observations_comments": "see definition of fibrinolysis in 'anticoagulants_prescriptions_bl_def' tab",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "atc_code_anticoagulants_cd",
+                    "description": "atc code of the prescribed anticoagulant drug",
+                    "standard_classification": "",
+                    "format": "String",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": true,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "E-RECETA",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": {
+                        "column_name": "code",
+                        "filename": "cat_anticoagulants_prescriptions_bl.csv"
+                    }
+                },
+                {
+                    "label": "start_date_prescription_anticoagulants_dt",
+                    "description": "prescription start date of prescription of drug family: anticoagulants",
+                    "standard_classification": "ISO 8601",
+                    "format": "Date",
+                    "type": "Date",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "E-RECETA",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "end_date_prescription_anticoagulants_dt",
+                    "description": "end date of prescription for drug in family: anticoagulants",
+                    "standard_classification": "ISO 8601",
+                    "format": "Date",
+                    "type": "Date",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "E-RECETA",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "antiarrhythmics_prescription_bl",
+                    "description": "prescription in primary care (outpatient) of drug: antiarrhythmics",
+                    "standard_classification": "",
+                    "format": "Boolean",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "E-RECETA",
+                    "observations_comments": "see definition of fibrinolysis in 'antiarrhythmics_prescription_bl_def' tab",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "atc_code_antiarrhythmic_cd",
+                    "description": "atc code of the prescribed anti-arrhythmic drug",
+                    "standard_classification": "",
+                    "format": "String",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": true,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "",
+                    "observations_comments": "E-RECETA",
+                    "examples": "",
+                    "catalog": {
+                        "column_name": "code",
+                        "filename": "cat_antiarrhythmics_prescription_bl.csv"
+                    }
+                },
+                {
+                    "label": "start_date_prescription_antiarrhythmic_dt",
+                    "description": "start date of the prescription of the drug of the family: antiarrhythmic drugs",
+                    "standard_classification": "ISO 8601",
+                    "format": "Date",
+                    "type": "Date",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "E-RECETA",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "end_date_prescription_antiarrhythmic_dt",
+                    "description": "end date of prescription of drug of the family: antiarrhythmic drugs",
+                    "standard_classification": "ISO 8601",
+                    "format": "Date",
+                    "type": "Date",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "E-RECETA",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "antihypertensive_prescription_bl",
+                    "description": "prescription in primary care (outpatient) for drug of the family: antihypertensive drugs ",
+                    "standard_classification": "",
+                    "format": "Boolean",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "(0 - No prescription, 1 - prescription)",
+                    "possible_data_source": "E-RECETA",
+                    "observations_comments": "see crosswalks for the definition of 'antihypertensive_prescription_bl' in the 'atc_antihypertensive_code_def' tab",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "atc_code_antihypertensive_cd",
+                    "description": "atc code of the prescribed anti-arrhythmic drug",
+                    "standard_classification": "",
+                    "format": "String",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": true,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "E-RECETA",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": {
+                        "column_name": "code",
+                        "filename": "cat_antihypertensive_prescription_bl.csv"
+                    }
+                },
+                {
+                    "label": "start_date_prescription_antihypertensive_dt",
+                    "description": "start date of the prescription of the drug of the family: antihypertensive drugs",
+                    "standard_classification": "ISO 8601",
+                    "format": "Date",
+                    "type": "Date",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "E-RECETA",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "end_date_prescription_antihypertensive_dt",
+                    "description": "end date of prescription of drug in family: antihypertensive drugs",
+                    "standard_classification": "ISO 8601",
+                    "format": "Date",
+                    "type": "Date",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "E-RECETA",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "antiaggregants_prescription_bl",
+                    "description": "prescription in primary care (outpatient) of drugs of the family: antiaggregants",
+                    "standard_classification": "",
+                    "format": "Boolean",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "(0 - No prescription, 1 - prescription)",
+                    "possible_data_source": "E-RECETA",
+                    "observations_comments": "see crosswalks for the definition of 'antiaggregants_prescription_bl' in the 'atc_code_antiaggregants_cd' tab",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "atc_code_antiaggregants_cd",
+                    "description": "atc code of the antiplatelet drug prescribed",
+                    "standard_classification": "",
+                    "format": "String",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": true,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "E-RECETA",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": {
+                        "column_name": "code",
+                        "filename": "cat_antiaggregants_prescription_bl.csv"
+                    }
+                },
+                {
+                    "label": "start_date_prescription_antiaggregants_dt",
+                    "description": "start date of prescription of drug of the family: antiaggregants",
+                    "standard_classification": "ISO 8601",
+                    "format": "Date",
+                    "type": "Date",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "E-RECETA",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "end_date_prescription_antiaggregants_dt",
+                    "description": "end date of prescription of drug in the family: antiaggregants",
+                    "standard_classification": "ISO 8601",
+                    "format": "Date",
+                    "type": "Date",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "E-RECETA",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "fibrinolitics_prescriptions_bl",
+                    "description": "prescription in primary care (outpatient) of drugs of the family: fibrinolitics",
+                    "standard_classification": "",
+                    "format": "Boolean",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "(0 - No prescription, 1 - prescription)",
+                    "possible_data_source": "E-RECETA",
+                    "observations_comments": "see crosswalks for the definition of 'fibrinolitics_prescriptions_bl' in the 'atc_code_fibrinolitics_cd' tab",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "atc_code_fibrinolitics_cd",
+                    "description": "atc code of the fibrinolitics drug prescribed",
+                    "standard_classification": "",
+                    "format": "String",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": true,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "E-RECETA",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": {
+                        "column_name": "code",
+                        "filename": "cat_fibrinolitics_prescriptions_bl.csv"
+                    }
+                },
+                {
+                    "label": "nihss_score_nm",
+                    "description": "national institutes of health stroke scale ",
+                    "standard_classification": "",
+                    "format": "Integer",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Recommended",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "PCH-URG (REPORT)",
+                    "observations_comments": "https://www.stroke.nih.gov/documents/NIH_Stroke_Scale_508C.pdf",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "nihss_score_date_dt",
+                    "description": "date on which nihss was calculated",
+                    "standard_classification": "ISO 8601",
+                    "format": "Date",
+                    "type": "Date",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "PCH-URG (REPORT)",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "modified_rankin_scale_cd",
+                    "description": "modified rankin scale (mrs)",
+                    "standard_classification": "",
+                    "format": "String",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "PCH-URG (REPORT)",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "modified_rankin_scale_dt",
+                    "description": "date on which mrs is calculated for you",
+                    "standard_classification": "Modified Rankin Scale (mRS)  (see link to the standard at 'observations')",
+                    "format": "Date",
+                    "type": "Date",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "PCH-URG (REPORT)",
+                    "observations_comments": "R.D. 174/2011 (https://www.boe.es/buscar/doc.php?id=BOE-A-2011-3174)",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "barthel_index_nm",
+                    "description": "barthel index (degree of dependency)",
+                    "standard_classification": "Barthel Scales (see link to the normative specification at 'observations')",
+                    "format": "Integer",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "OMI-AP (DGP)",
+                    "observations_comments": "R.D. 174/2011 (https://www.boe.es/buscar/doc.php?id=BOE-A-2011-3174)",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "barthel_index_dt",
+                    "description": "date on which the barthel index is calculated.",
+                    "standard_classification": "ISO 8601",
+                    "format": "Date",
+                    "type": "Date",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "OMI-AP (DGP)",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "exitus_bl",
+                    "description": "date of death ",
+                    "standard_classification": "",
+                    "format": "Boolean",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "ANY",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "heart_failure_bl",
+                    "description": "history of heart failure",
+                    "standard_classification": "",
+                    "format": "Boolean",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "CMBD",
+                    "observations_comments": "see crosswalks for the definition of 'heart_failure_bl' in the 'heart_failure_bl_def' tab",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "hypertension_bl",
+                    "description": "history of hipertension",
+                    "standard_classification": "",
+                    "format": "Boolean",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "CMBD",
+                    "observations_comments": "see crosswalks for the definition of 'hypertension_bl' in the 'hypertension_bl_def' tab",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "diabetes_bl",
+                    "description": "history of diabetes",
+                    "standard_classification": "",
+                    "format": "Boolean",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "CMBD",
+                    "observations_comments": "see crosswalks for the definition of 'diabetes_bl' in the 'diabetes_bl_def' tab",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "atrial_fibrillation_bl",
+                    "description": "history of atrial fibrillation",
+                    "standard_classification": "",
+                    "format": "Boolean",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "CMBD",
+                    "observations_comments": "see crosswalks for the definition of 'atrial_fibrillation_bl' in the 'atrial_fibrillation_bl_def' tab",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "valvular_disease_bl",
+                    "description": "history of valvular disease",
+                    "standard_classification": "",
+                    "format": "Boolean",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "CMBD",
+                    "observations_comments": "see crosswalks for the definition of 'valvular_disease_bl' in the 'valvular_disease_bl_def' tab",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "hospital_icu_admission_bl",
+                    "description": "has the patient being admitted to icu?",
+                    "standard_classification": "",
+                    "format": "Boolean",
+                    "type": "Categorical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "CMBD",
+                    "observations_comments": "Calculated with hospital_icu_stay",
+                    "examples": "",
+                    "catalog": null
+                },
+                {
+                    "label": "hospital_icu_stay",
+                    "description": "length of icu stay",
+                    "standard_classification": "",
+                    "format": "Integer",
+                    "type": "Numerical",
+                    "units": "",
+                    "requirement_level": "Required",
+                    "characteristic": "Observed",
+                    "catalog_bl": false,
+                    "transformations_from_origin": "",
+                    "possible_data_source": "CMBD",
+                    "observations_comments": "",
+                    "examples": "",
+                    "catalog": null
+                }
+            ],
+            "rules": [
+                {
+                    "expression": "age_nm BETWEEN 18 AND 115",
+                    "name": "age_nm",
+                    "description": "Rule for column age_nm"
+                },
+                {
+                    "expression": "sex_cd IN ('0', '1', '2', '9')",
+                    "name": "sex_cd",
+                    "description": "Rule for column sex_cd"
+                },
+                {
+                    "expression": "type_admission_cd IN ('1', '2')",
+                    "name": "type_admission_cd",
+                    "description": "Rule for column type_admission_cd"
+                },
+                {
+                    "expression": "hospital_admission_date_dt BETWEEN ''2010-01-01'' AND ''2020-12-31''",
+                    "name": "hospital_admission_date_dt",
+                    "description": "Rule for column hospital_admission_date_dt"
+                },
+                {
+                    "expression": "hospital_admission_date_dt <= exitus_dt",
+                    "name": "hospital_admission_date_dt",
+                    "description": "Rule for column hospital_admission_date_dt"
+                },
+                {
+                    "expression": "hospital_intervention_date_dt >= hospital_admission_date_dt",
+                    "name": "hospital_intervention_date_dt",
+                    "description": "Rule for column hospital_intervention_date_dt"
+                },
+                {
+                    "expression": "hospital_intervention_date_dt <= exitus_dt",
+                    "name": "hospital_intervention_date_dt",
+                    "description": "Rule for column hospital_intervention_date_dt"
+                },
+                {
+                    "expression": "hospital_discharge_date_dt >= hospital_intervention_date_dt",
+                    "name": "hospital_discharge_date_dt",
+                    "description": "Rule for column hospital_discharge_date_dt"
+                },
+                {
+                    "expression": "hospital_discharge_date_dt <= exitus_dt",
+                    "name": "hospital_discharge_date_dt",
+                    "description": "Rule for column hospital_discharge_date_dt"
+                },
+                {
+                    "expression": "hospital_type_discharge_cd IN ('1', '2', '3', '4', '5', '8', '9')",
+                    "name": "hospital_type_discharge_cd",
+                    "description": "Rule for column hospital_type_discharge_cd"
+                },
+                {
+                    "expression": "inhospital_trombectomy_bl IN ('0', '1')",
+                    "name": "inhospital_trombectomy_bl",
+                    "description": "Rule for column inhospital_trombectomy_bl"
+                },
+                {
+                    "expression": "inhospital_fibrinolysis_bl IN ('0', '1')",
+                    "name": "inhospital_fibrinolysis_bl",
+                    "description": "Rule for column inhospital_fibrinolysis_bl"
+                },
+                {
+                    "expression": "type_ischemic_stroke_bl IN ('0', '1')",
+                    "name": "type_ischemic_stroke_bl",
+                    "description": "Rule for column type_ischemic_stroke_bl"
+                },
+                {
+                    "expression": "socioeconomic_level_cd IN ('1', '2', '3', '4', '5', '6', '7', '8')",
+                    "name": "socioeconomic_level_cd",
+                    "description": "Rule for column socioeconomic_level_cd"
+                },
+                {
+                    "expression": "admission_emergency_care_dt BETWEEN ''2010-01-01'' AND ''2020-12-31''",
+                    "name": "admission_emergency_care_dt",
+                    "description": "Rule for column admission_emergency_care_dt"
+                },
+                {
+                    "expression": "admission_emergency_care_dt <= exitus_dt",
+                    "name": "admission_emergency_care_dt",
+                    "description": "Rule for column admission_emergency_care_dt"
+                },
+                {
+                    "expression": "triage_emergency_care_dt >= admission_emergency_care_dt",
+                    "name": "triage_emergency_care_dt",
+                    "description": "Rule for column triage_emergency_care_dt"
+                },
+                {
+                    "expression": "first_asisstance_medical_dt >= triage_emergency_care_dt",
+                    "name": "first_asisstance_medical_dt",
+                    "description": "Rule for column first_asisstance_medical_dt"
+                },
+                {
+                    "expression": "admission_to_observation_ward_dt >= first_asisstance_medical_dt",
+                    "name": "admission_to_observation_ward_dt",
+                    "description": "Rule for column admission_to_observation_ward_dt"
+                },
+                {
+                    "expression": "internal_neurology_consultation_dt >= admission_to_observation_ward_dt",
+                    "name": "internal_neurology_consultation_dt",
+                    "description": "Rule for column internal_neurology_consultation_dt"
+                },
+                {
+                    "expression": "ct_mri_dt >= internal_neurology_consultation_dt",
+                    "name": "ct_mri_dt",
+                    "description": "Rule for column ct_mri_dt"
+                },
+                {
+                    "expression": "ct_inhospital_bl IN ('0', '1')",
+                    "name": "ct_inhospital_bl",
+                    "description": "Rule for column ct_inhospital_bl"
+                },
+                {
+                    "expression": "mri_inhospital_bl IN ('0', '1')",
+                    "name": "mri_inhospital_bl",
+                    "description": "Rule for column mri_inhospital_bl"
+                },
+                {
+                    "expression": "thrombolysis_emergency_dt >= ct_mri_dt",
+                    "name": "thrombolysis_emergency_dt",
+                    "description": "Rule for column thrombolysis_emergency_dt"
+                },
+                {
+                    "expression": "discharge_from_emergency_dt >= thrombolysis_emergency_dt",
+                    "name": "discharge_from_emergency_dt",
+                    "description": "Rule for column discharge_from_emergency_dt"
+                },
+                {
+                    "expression": "type_discharge_emergency_bl IN ('0', '1')",
+                    "name": "type_discharge_emergency_bl",
+                    "description": "Rule for column type_discharge_emergency_bl"
+                },
+                {
+                    "expression": "n_readmissions_30days_all_cause_bl IN ('0', '1')",
+                    "name": "n_readmissions_30days_all_cause_bl",
+                    "description": "Rule for column n_readmissions_30days_all_cause_bl"
+                },
+                {
+                    "expression": "anticoagulants_prescriptions_bl IN ('0', '1')",
+                    "name": "anticoagulants_prescriptions_bl",
+                    "description": "Rule for column anticoagulants_prescriptions_bl"
+                },
+                {
+                    "expression": "start_date_prescription_anticoagulants_dt BETWEEN ''2010-01-01'' AND ''2020-12-31''",
+                    "name": "start_date_prescription_anticoagulants_dt",
+                    "description": "Rule for column start_date_prescription_anticoagulants_dt"
+                },
+                {
+                    "expression": "start_date_prescription_anticoagulants_dt <= exitus_dt",
+                    "name": "start_date_prescription_anticoagulants_dt",
+                    "description": "Rule for column start_date_prescription_anticoagulants_dt"
+                },
+                {
+                    "expression": "end_date_prescription_anticoagulants_dt > start_date_prescription_anticoagulants_dt",
+                    "name": "end_date_prescription_anticoagulants_dt",
+                    "description": "Rule for column end_date_prescription_anticoagulants_dt"
+                },
+                {
+                    "expression": "end_date_prescription_anticoagulants_dt <= exitus_dt",
+                    "name": "end_date_prescription_anticoagulants_dt",
+                    "description": "Rule for column end_date_prescription_anticoagulants_dt"
+                },
+                {
+                    "expression": "antiarrhythmics_prescription_bl IN ('0', '1')",
+                    "name": "antiarrhythmics_prescription_bl",
+                    "description": "Rule for column antiarrhythmics_prescription_bl"
+                },
+                {
+                    "expression": "start_date_prescription_antiarrhythmic_dt BETWEEN ''2010-01-01'' AND ''2020-12-31''",
+                    "name": "start_date_prescription_antiarrhythmic_dt",
+                    "description": "Rule for column start_date_prescription_antiarrhythmic_dt"
+                },
+                {
+                    "expression": "start_date_prescription_antiarrhythmic_dt <= exitus_dt",
+                    "name": "start_date_prescription_antiarrhythmic_dt",
+                    "description": "Rule for column start_date_prescription_antiarrhythmic_dt"
+                },
+                {
+                    "expression": "end_date_prescription_antiarrhythmic_dt > start_date_prescription_antiarrhythmic_dt",
+                    "name": "end_date_prescription_antiarrhythmic_dt",
+                    "description": "Rule for column end_date_prescription_antiarrhythmic_dt"
+                },
+                {
+                    "expression": "end_date_prescription_antiarrhythmic_dt <= exitus_dt",
+                    "name": "end_date_prescription_antiarrhythmic_dt",
+                    "description": "Rule for column end_date_prescription_antiarrhythmic_dt"
+                },
+                {
+                    "expression": "antihypertensive_prescription_bl IN ('0', '1')",
+                    "name": "antihypertensive_prescription_bl",
+                    "description": "Rule for column antihypertensive_prescription_bl"
+                },
+                {
+                    "expression": "start_date_prescription_antihypertensive_dt BETWEEN ''2010-01-01'' AND ''2020-12-31''",
+                    "name": "start_date_prescription_antihypertensive_dt",
+                    "description": "Rule for column start_date_prescription_antihypertensive_dt"
+                },
+                {
+                    "expression": "start_date_prescription_antihypertensive_dt <= exitus_dt",
+                    "name": "start_date_prescription_antihypertensive_dt",
+                    "description": "Rule for column start_date_prescription_antihypertensive_dt"
+                },
+                {
+                    "expression": "end_date_prescription_antihypertensive_dt > start_date_prescription_antihypertensive_dt",
+                    "name": "end_date_prescription_antihypertensive_dt",
+                    "description": "Rule for column end_date_prescription_antihypertensive_dt"
+                },
+                {
+                    "expression": "end_date_prescription_antihypertensive_dt <= exitus_dt",
+                    "name": "end_date_prescription_antihypertensive_dt",
+                    "description": "Rule for column end_date_prescription_antihypertensive_dt"
+                },
+                {
+                    "expression": "antiaggregants_prescription_bl IN ('0', '1')",
+                    "name": "antiaggregants_prescription_bl",
+                    "description": "Rule for column antiaggregants_prescription_bl"
+                },
+                {
+                    "expression": "start_date_prescription_antiaggregants_dt BETWEEN ''2010-01-01'' AND ''2020-12-31''",
+                    "name": "start_date_prescription_antiaggregants_dt",
+                    "description": "Rule for column start_date_prescription_antiaggregants_dt"
+                },
+                {
+                    "expression": "start_date_prescription_antiaggregants_dt <= exitus_dt",
+                    "name": "start_date_prescription_antiaggregants_dt",
+                    "description": "Rule for column start_date_prescription_antiaggregants_dt"
+                },
+                {
+                    "expression": "end_date_prescription_antiaggregants_dt > start_date_prescription_antiaggregants_dt",
+                    "name": "end_date_prescription_antiaggregants_dt",
+                    "description": "Rule for column end_date_prescription_antiaggregants_dt"
+                },
+                {
+                    "expression": "end_date_prescription_antiaggregants_dt <= exitus_dt",
+                    "name": "end_date_prescription_antiaggregants_dt",
+                    "description": "Rule for column end_date_prescription_antiaggregants_dt"
+                },
+                {
+                    "expression": "fibrinolitics_prescriptions_bl IN ('0', '1')",
+                    "name": "fibrinolitics_prescriptions_bl",
+                    "description": "Rule for column fibrinolitics_prescriptions_bl"
+                },
+                {
+                    "expression": "nihss_score_nm IN ('1', '2', '3', '4', '5')",
+                    "name": "nihss_score_nm",
+                    "description": "Rule for column nihss_score_nm"
+                },
+                {
+                    "expression": "nihss_score_date_dt = first_asisstance_medical_dt",
+                    "name": "nihss_score_date_dt",
+                    "description": "Rule for column nihss_score_date_dt"
+                },
+                {
+                    "expression": "modified_rankin_scale_cd IN ('0', '1', '2', '3', '4', '5', '6', '7', '8')",
+                    "name": "modified_rankin_scale_cd",
+                    "description": "Rule for column modified_rankin_scale_cd"
+                },
+                {
+                    "expression": "modified_rankin_scale_dt = first_asisstance_medical_dt",
+                    "name": "modified_rankin_scale_dt",
+                    "description": "Rule for column modified_rankin_scale_dt"
+                },
+                {
+                    "expression": "barthel_index_nm IN ('1', '2', '3', '4', '5')",
+                    "name": "barthel_index_nm",
+                    "description": "Rule for column barthel_index_nm"
+                },
+                {
+                    "expression": "barthel_index_dt = first_asisstance_medical_dt",
+                    "name": "barthel_index_dt",
+                    "description": "Rule for column barthel_index_dt"
+                },
+                {
+                    "expression": "exitus_bl IN ('0', '1')",
+                    "name": "exitus_bl",
+                    "description": "Rule for column exitus_bl"
+                },
+                {
+                    "expression": "heart_failure_bl IN ('0', '1')",
+                    "name": "heart_failure_bl",
+                    "description": "Rule for column heart_failure_bl"
+                },
+                {
+                    "expression": "hypertension_bl IN ('0', '1')",
+                    "name": "hypertension_bl",
+                    "description": "Rule for column hypertension_bl"
+                },
+                {
+                    "expression": "diabetes_bl IN ('0', '1')",
+                    "name": "diabetes_bl",
+                    "description": "Rule for column diabetes_bl"
+                },
+                {
+                    "expression": "atrial_fibrillation_bl IN ('0', '1')",
+                    "name": "atrial_fibrillation_bl",
+                    "description": "Rule for column atrial_fibrillation_bl"
+                },
+                {
+                    "expression": "valvular_disease_bl IN ('0', '1')",
+                    "name": "valvular_disease_bl",
+                    "description": "Rule for column valvular_disease_bl"
+                },
+                {
+                    "expression": "hospital_icu_admission_bl IN ('0', '1')",
+                    "name": "hospital_icu_admission_bl",
+                    "description": "Rule for column hospital_icu_admission_bl"
+                },
+                {
+                    "expression": "hospital_icu_stay >= 0",
+                    "name": "hospital_icu_stay",
+                    "description": "Rule for column hospital_icu_stay"
+                }
+            ]
+        }
+    ],
+    "relationships": []
+}
