@@ -21,6 +21,16 @@ regional Stroke Plans.
 - To analyse the impact of specific care interventions within and across care paths, in terms of patients survival.
 - To compare the traditional analytical methods with process mining methods in terms of modeling quality, prediction performance and information provided.
 
+## HOW TO RUN
+Use the following code snippet to create the container.
+```bash
+docker pull ghcr.io/cienciadedatosysalud/concept-stroke:latest
+
+docker run -d -p 127.0.0.1:3000:3000 --name concept-stroke-aspire ghcr.io/cienciadedatosysalud/concept-stroke:latest
+
+# Open your web browser at http://localhost:3000.
+```
+
 ## Analytical pipeline
 ## Outputs
 Outputs structure and content is described below including the files and folders that are generated when creating a research project with the `cdmb` Python library. There are four main folders corresponding to:
