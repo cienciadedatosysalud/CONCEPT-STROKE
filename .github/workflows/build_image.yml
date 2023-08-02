@@ -33,5 +33,5 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: ghcr.io/cienciadedatosysalud/concept-stroke:2.0.0,ghcr.io/cienciadedatosysalud/concept-stroke:latest
+          tags: ghcr.io/cienciadedatosysalud/concept-stroke:${{env.TAG_NAME}},ghcr.io/cienciadedatosysalud/concept-stroke:latest
           file: ./Dockerfile
