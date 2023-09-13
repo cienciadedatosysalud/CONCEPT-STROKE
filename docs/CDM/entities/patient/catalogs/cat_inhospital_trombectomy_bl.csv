@@ -1,0 +1,30 @@
+encoding,code,clean_code,description,type,subtype
+icd-9-mc,39.74,3974,Endovascular removal of obstruction of head and neck vessel(s),PROC,TROM
+icd-10-mc,03CG3ZZ,03CG3ZZ,"Extirpation of Matter from Intracranial Artery, Percutaneous Approach",PROC,TROM
+icd-10-mc,03CG4ZZ,03CG4ZZ,"Extirpation of Matter from Intracranial Artery, Percutaneous Endoscopic Approach",PROC,TROM
+icd-10-mc,03CH3ZZ,03CH3ZZ,"Extirpation of Matter from Right Common Carotid Artery, Percutaneous Approach",PROC,TROM
+icd-10-mc,03CH4ZZ,03CH4ZZ,"Extirpation of Matter from Right Common Carotid Artery, Percutaneous Endoscopic Approach",PROC,TROM
+icd-10-mc,03CJ3ZZ,03CJ3ZZ,"Extirpation of Matter from left Common Carotid Artery, Percutaneous Approach",PROC,TROM
+icd-10-mc,03CJ4ZZ,03CJ4ZZ,"Extirpation of Matter from left Common Carotid Artery, Percutaneous Endoscopic Approach",PROC,TROM
+icd-10-mc,03CK3ZZ,03CK3ZZ,"Extirpation of Matter from Right Internal Carotid Artery, Percutaneous Approach",PROC,TROM
+icd-10-mc,03CK4ZZ,03CK4ZZ,"Extirpation of Matter from Right Internal Carotid Artery, Percutaneous Endoscopic Approach",PROC,TROM
+icd-10-mc,03CL3ZZ,03CL3ZZ,"Extirpation of Matter from left Internal Carotid Artery, Percutaneous Approach",PROC,TROM
+icd-10-mc,03CL4ZZ,03CL4ZZ,"Extirpation of Matter from left Internal Carotid Artery, Percutaneous Endoscopic Approach",PROC,TROM
+icd-10-mc,03CM3ZZ,03CM3ZZ,"Extirpation of Matter from Right External Carotid Artery, Percutaneous Approach",PROC,TROM
+icd-10-mc,03CM4ZZ,03CM4ZZ,"Extirpation of Matter from Right External Carotid Artery, Percutaneous Endoscopic Approach",PROC,TROM
+icd-10-mc,03CN3ZZ,03CN3ZZ,"Extirpation of Matter from left External Carotid Artery, Percutaneous Approach",PROC,TROM
+icd-10-mc,03CN4ZZ,03CN4ZZ,"Extirpation of Matter from left External Carotid Artery, Percutaneous Endoscopic Approach",PROC,TROM
+icd-10-mc,03CP3ZZ,03CP3ZZ,"Extirpation of Matter from Right Vertebral Artery, Percutaneous Approach",PROC,TROM
+icd-10-mc,03CP4ZZ,03CP4ZZ,"Extirpation of Matter from Right Vertebral Artery, Percutaneous Endoscopic Approach",PROC,TROM
+icd-10-mc,03CQ3ZZ,03CQ3ZZ,"Extirpation of Matter from left Vertebral Artery, Percutaneous Approach",PROC,TROM
+icd-10-mc,03CQ4ZZ,03CQ4ZZ,"Extirpation of Matter from left Vertebral Artery, Percutaneous Endoscopic Approach",PROC,TROM
+icd-10-mc,03CR3ZZ,03CR3ZZ,"Extirpation of Matter from Face Artery, Percutaneous Approach",PROC,TROM
+icd-10-mc,03CR4ZZ,03CR4ZZ,"Extirpation of Matter from Face Artery, Percutaneous Endoscopic Approach",PROC,TROM
+icd-10-mc,03CS3ZZ,03CS3ZZ,"Extirpation of Matter from Right Temporal Artery, Percutaneous Approach",PROC,TROM
+icd-10-mc,03CS4ZZ,03CS4ZZ,"Extirpation of Matter from Right Temporal Artery, Percutaneous Endoscopic Approach",PROC,TROM
+icd-10-mc,03CT3ZZ,03CT3ZZ,"Extirpation of Matter from left Temporal Artery, Percutaneous Approach",PROC,TROM
+icd-10-mc,03CT4ZZ,03CT4ZZ,"Extirpation of Matter from left Temporal Artery, Percutaneous Endoscopic Approach",PROC,TROM
+icd-10-mc,03CU3ZZ,03CU3ZZ,"Extirpation of Matter from Right Thyroid Artery, Percutaneous Approach",PROC,TROM
+icd-10-mc,03CU4ZZ,03CU4ZZ,"Extirpation of Matter from Right Thyroid Artery, Percutaneous Endoscopic Approach",PROC,TROM
+icd-10-mc,03CV3ZZ,03CV3ZZ,"Extirpation of Matter from Left Thyroid Artery, Percutaneous Approach",PROC,TROM
+icd-10-mc,03CV4ZZ,03CV4ZZ,"Extirpation of Matter from Left Thyroid Artery, Percutaneous Endoscopic Approach",PROC,TROM

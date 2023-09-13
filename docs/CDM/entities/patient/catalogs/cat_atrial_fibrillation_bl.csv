@@ -1,0 +1,32 @@
+encoding,code,clean_code,description,type,subtype,observations
+icd-9-mc,426.0,4260,"Atrioventricular block, complete",DIAG,,AHRQ APPENDIX N
+icd-9-mc,427.0,4270,Paroxysmal supraventricular tachycardia,DIAG,,AHRQ APPENDIX N
+icd-9-mc,427.1,4271,Paroxysmal ventricular tachycardia,DIAG,,AHRQ APPENDIX N
+icd-9-mc,427.2,4272,"Paroxysmal tachycardia, unspecified",DIAG,,AHRQ APPENDIX N
+icd-9-mc,427.3,4273,Atrial fibrillation and flutter,DIAG,,
+icd-9-mc,427.31,42731,Atrial fibrillation,DIAG,,
+icd-9-mc,427.32,42732,Atrial flutter,DIAG,,
+icd-9-mc,427.4,4274,Ventricular fibrillation and flutter,DIAG,,AHRQ APPENDIX N
+icd-9-mc,427.41,42741,Ventricular fibrillation,DIAG,,AHRQ APPENDIX N
+icd-9-mc,427.42,42742,Ventricular flutter,DIAG,,AHRQ APPENDIX N
+icd-9-mc,427.9,4279,Cardiac dysrhythmia,DIAG,,AHRQ APPENDIX N
+icd-10-mc,I44.2,I442,"Atrioventricular block, complete",DIAG,,AHRQ APPENDIX N
+icd-10-mc,I47.2,I472,supraventricular tachycardia,DIAG,,AHRQ APPENDIX N
+icd-10-mc,I47.9,I479,"Paroxysmal tachycardia, unspecified",DIAG,,AHRQ APPENDIX N
+icd-10-mc,I48,I48,Atrial fibrillation and flutter,DIAG,,
+icd-10-mc,I48.0,I480,Paroxysmal atrial fibrillation,DIAG,,
+icd-10-mc,I48.1,I481,Persistent atrial fibrillation,DIAG,,
+icd-10-mc,I48.11,I4811,Longstanding persistent atrial fibrillation,DIAG,,
+icd-10-mc,I48.19,I4819,Other persistent atrial fibrillation,DIAG,,
+icd-10-mc,I48.2,I482,Chronic atrial fibrillation,DIAG,,
+icd-10-mc,I48.20,I4820,unspecified,DIAG,,AHRQ APPENDIX N
+icd-10-mc,I48.21,I4821,Permanent atrial fibrillation,DIAG,,AHRQ APPENDIX N
+icd-10-mc,I48.3,I483,Typical atrial flutter,DIAG,,AHRQ APPENDIX N
+icd-10-mc,I48.4,I484,Atypical atrial flutter,DIAG,,
+icd-10-mc,I48.9,I489,Unspecified atrial fibrillation and atrial flutter,DIAG,,
+icd-10-mc,I48.91,I4891,Unspecified atrial fibrillation,DIAG,,
+icd-10-mc,I48.92,I4892,Unspecified atrial flutter,DIAG,,
+icd-10-mc,I49.01,I4901,Ventricular fibrillation,DIAG,,
+icd-10-mc,I49.02,I4902,Ventricular flutter,DIAG,,
+icd-10-mc,I49.9,I499,"Cardiac dysrhythmia, unspecified",DIAG,,
+icp-2,K78,K78,Fibrilacin auricular/aleteo auricular,DIAG,,

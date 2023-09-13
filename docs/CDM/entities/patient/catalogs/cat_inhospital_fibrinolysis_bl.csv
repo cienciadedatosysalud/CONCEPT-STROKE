@@ -1,0 +1,8 @@
+encoding,code,clean_code,description,type,subtype
+icd-9-mc,V45.88,V4588,Status post administration of tPA (rtPA) in a different facility within the last 24 hours prior to admission to current facility,DIAG,FIBR
+icd-9-mc,99.10,9910,Injection or infusion of thrombolytic agent,PROC,FIBR
+icd-10-mc,Z92.82,Z9182,Status post administration of tPA (rtPA) in a different facility within the last 24 hours prior to admission to current facility,DIAG,FIBR
+icd-10-mc,3E03317,3E03317,"Introduction of Other Thrombolytic into Peripheral Vein, Percutaneous Approach",PROC,FIBR
+icd-10-mc,3E04317,3E04317,"Introduction of Other Thrombolytic into Central Vein, Percutaneous Approac",PROC,FIBR
+icd-10-mc,3E05317,3E05317,"Introduction of Other Thrombolytic into Peripheral Artery, Percutaneous Approach",PROC,FIBR
+icd-10-mc,3E06317,3E06317,"Introduction of Other Thrombolytic into Central Artery, Percutaneous Approach",PROC,FIBR
