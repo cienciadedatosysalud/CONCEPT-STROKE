@@ -1,8 +1,8 @@
 {
-    "created_dt": "20230801082735_cdmb",
-    "uuid": "994959c4-7706-49ba-b075-89bdd018da35",
+    "created_dt": "20230913151748_cdmb",
+    "uuid": "daccc614-5646-4894-8677-3c479c7b893f",
     "metadata": {
-        "uuid": "f3db8f74-ec5e-4f45-ac9b-517768ac78dd",
+        "uuid": "c292aff6-80cd-463e-bb9a-19003710cd67",
         "project": "CONCEPT-STROKE",
         "funder": "This project has received funding from the Instituto de Salud Carlos III under grant agreement (PI19/00154; PI19/00306; PI19/00381; PI19/00056; PI 20/00783). The project also received a research grant from Instituto de Salud Carlos III, Ministry of Science and Innovation (Spain), awarded on thecall for the creation of Health Outcomes-Oriented Cooperative Research Networks (RICORS), with reference RD21/0016/0016, co-funded with European Union – NextGenerationEU funds.",
         "url_project": "https://atlasvpm.org/concept-demo/#_ftn1",
@@ -58,16 +58,12 @@
         "exclusion_criteria": "Patients 17 years or younger; Patients with a diagnosis of acute hemorragic stroke or with other non-specific stroke diagnoses (i.e. transient ischemic attack - TIA)",
         "beggining_study_period": "2010-01-01",
         "end_study_period": "2020-12-31",
-        "cohort_definition_inclusion": {
-            "filename": "cat_type_ischemic_stroke_bl.csv",
-            "nature": "Condition",
-            "column_name": "clean_code"
-        },
+        "cohort_definition_inclusion": null,
         "cohort_definition_exclusion": null
     },
     "entities": [
         {
-            "uuid": "2321e07b-0545-4ca7-a5f4-7e08e33a34a9",
+            "uuid": "b8052232-89c5-4869-b09e-1c35d36baafb",
             "name": "patient",
             "time_varying": false,
             "variables": [
@@ -200,8 +196,8 @@
                     "characteristic": "Observed",
                     "catalog_bl": true,
                     "transformations_from_origin": "",
-                    "possible_data_source": "",
-                    "observations_comments": "BDU",
+                    "possible_data_source": "BDU",
+                    "observations_comments": "",
                     "examples": "",
                     "catalog": {
                         "column_name": "municipio_cd",
@@ -247,7 +243,7 @@
                     "label": "hospital_admission_date_dt",
                     "description": "date of hospital admission",
                     "standard_classification": "ISO 8601",
-                    "format": "Date",
+                    "format": "Datetime",
                     "type": "Date",
                     "units": "",
                     "requirement_level": "Required",
@@ -263,7 +259,7 @@
                     "label": "hospital_intervention_date_dt",
                     "description": "date of main intervention (surgery)",
                     "standard_classification": "ISO 8601",
-                    "format": "Date",
+                    "format": "Datetime",
                     "type": "Date",
                     "units": "",
                     "requirement_level": "Required",
@@ -279,7 +275,7 @@
                     "label": "hospital_discharge_date_dt",
                     "description": "date of discharge from hospital",
                     "standard_classification": "ISO 8601",
-                    "format": "Date",
+                    "format": "Datetime",
                     "type": "Date",
                     "units": "",
                     "requirement_level": "Required",
@@ -316,12 +312,15 @@
                     "units": "",
                     "requirement_level": "Required",
                     "characteristic": "Observed",
-                    "catalog_bl": false,
-                    "transformations_from_origin": "",
+                    "catalog_bl": true,
+                    "transformations_from_origin": "(0 - FALSE, 1 - TRUE)",
                     "possible_data_source": "CMBD",
-                    "observations_comments": "see definition for intervention in 'mechanical_thombectomy_def' tab",
+                    "observations_comments": "see definition in 'patient_inhospital_trombectomy_bl' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
                     "examples": "",
-                    "catalog": null
+                    "catalog": {
+                        "column_name": "code",
+                        "filename": "cat_inhospital_trombectomy_bl.csv"
+                    }
                 },
                 {
                     "label": "inhospital_fibrinolysis_bl",
@@ -332,12 +331,15 @@
                     "units": "",
                     "requirement_level": "Required",
                     "characteristic": "Observed",
-                    "catalog_bl": false,
-                    "transformations_from_origin": "",
+                    "catalog_bl": true,
+                    "transformations_from_origin": "(0 - FALSE, 1 - TRUE)",
                     "possible_data_source": "CMBD",
-                    "observations_comments": "see definition of fibrinolysis in 'inhospital_fibrinolysis_bl_def' tab",
+                    "observations_comments": "see definition in 'patient_inhospital_fibrinolysis_bl' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
                     "examples": "",
-                    "catalog": null
+                    "catalog": {
+                        "column_name": "code",
+                        "filename": "cat_inhospital_fibrinolysis_bl.csv"
+                    }
                 },
                 {
                     "label": "type_ischemic_stroke_bl",
@@ -348,12 +350,15 @@
                     "units": "",
                     "requirement_level": "Required",
                     "characteristic": "Observed",
-                    "catalog_bl": false,
-                    "transformations_from_origin": "",
+                    "catalog_bl": true,
+                    "transformations_from_origin": "(0 - FALSE, 1 - TRUE)",
                     "possible_data_source": "CMBD",
-                    "observations_comments": "see classification of type of stroke in 'ischemic_stroke_def' tab",
+                    "observations_comments": "see definition in 'patient_type_ischemic_stroke_bl' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
                     "examples": "",
-                    "catalog": null
+                    "catalog": {
+                        "column_name": "code",
+                        "filename": "cat_type_ischemic_stroke_bl.csv"
+                    }
                 },
                 {
                     "label": "socioeconomic_level_cd",
@@ -375,7 +380,7 @@
                     "label": "admission_emergency_care_dt",
                     "description": "date and time of admission to the emergency (admission)",
                     "standard_classification": "ISO 8601",
-                    "format": "Date",
+                    "format": "Datetime",
                     "type": "Date",
                     "units": "",
                     "requirement_level": "Required",
@@ -391,7 +396,7 @@
                     "label": "triage_emergency_care_dt",
                     "description": "date and time of emergency triage",
                     "standard_classification": "ISO 8601",
-                    "format": "Date",
+                    "format": "Datetime",
                     "type": "Date",
                     "units": "",
                     "requirement_level": "Required",
@@ -407,7 +412,7 @@
                     "label": "first_asisstance_medical_dt",
                     "description": "date and time of first medical assistance in the emergency",
                     "standard_classification": "ISO 8601",
-                    "format": "Date",
+                    "format": "Datetime",
                     "type": "Date",
                     "units": "",
                     "requirement_level": "Required",
@@ -423,7 +428,7 @@
                     "label": "admission_to_observation_ward_dt",
                     "description": "date and time of transfer to the observation room in the emergency",
                     "standard_classification": "ISO 8601",
-                    "format": "Date",
+                    "format": "Datetime",
                     "type": "Date",
                     "units": "",
                     "requirement_level": "Required",
@@ -439,7 +444,7 @@
                     "label": "internal_neurology_consultation_dt",
                     "description": "date and time of neurology interconsultation",
                     "standard_classification": "ISO 8601",
-                    "format": "Date",
+                    "format": "Datetime",
                     "type": "Date",
                     "units": "",
                     "requirement_level": "Required",
@@ -455,7 +460,7 @@
                     "label": "ct_mri_dt",
                     "description": "date and time of ct/mri (medical imaging test)",
                     "standard_classification": "ISO 8601",
-                    "format": "Date",
+                    "format": "Datetime",
                     "type": "Date",
                     "units": "",
                     "requirement_level": "Required",
@@ -503,7 +508,7 @@
                     "label": "thrombolysis_emergency_dt",
                     "description": "date and time of procedure performed in emergency episode: thrombolysis (i.e., fibrinolysis)",
                     "standard_classification": "ISO 8601",
-                    "format": "Date",
+                    "format": "Datetime",
                     "type": "Date",
                     "units": "",
                     "requirement_level": "Required",
@@ -511,7 +516,7 @@
                     "catalog_bl": false,
                     "transformations_from_origin": "",
                     "possible_data_source": "PCH-URG",
-                    "observations_comments": "see definition of fibrinolysis in 'inhospital_fibrinolysis_bl_def' tab",
+                    "observations_comments": "",
                     "examples": "",
                     "catalog": null
                 },
@@ -519,7 +524,7 @@
                     "label": "discharge_from_emergency_dt",
                     "description": "date and time of discharge from emergency",
                     "standard_classification": "ISO 8601",
-                    "format": "Date",
+                    "format": "Datetime",
                     "type": "Date",
                     "units": "",
                     "requirement_level": "Required",
@@ -551,7 +556,7 @@
                     "label": "exitus_dt",
                     "description": "date of death ",
                     "standard_classification": "ISO 8601",
-                    "format": "Date",
+                    "format": "Datetime",
                     "type": "Date",
                     "units": "",
                     "requirement_level": "Required",
@@ -599,7 +604,7 @@
                     "label": "date_first_readmissions_30days_all_cause_dt",
                     "description": "date of first all-cause readmission within 30 days of discharge from index hospital case",
                     "standard_classification": "ISO 8601",
-                    "format": "Date",
+                    "format": "Datetime",
                     "type": "Date",
                     "units": "",
                     "requirement_level": "Required",
@@ -637,9 +642,9 @@
                     "requirement_level": "Required",
                     "characteristic": "Observed",
                     "catalog_bl": false,
-                    "transformations_from_origin": "",
+                    "transformations_from_origin": "(0 - No prescription (FALSE), 1 - prescription (TRUE))",
                     "possible_data_source": "E-RECETA",
-                    "observations_comments": "see definition of fibrinolysis in 'anticoagulants_prescriptions_bl_def' tab",
+                    "observations_comments": "see definition in 'patient_atc_code_anticoagulants_cd' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
                     "examples": "",
                     "catalog": null
                 },
@@ -666,7 +671,7 @@
                     "label": "start_date_prescription_anticoagulants_dt",
                     "description": "prescription start date of prescription of drug family: anticoagulants",
                     "standard_classification": "ISO 8601",
-                    "format": "Date",
+                    "format": "Datetime",
                     "type": "Date",
                     "units": "",
                     "requirement_level": "Required",
@@ -682,7 +687,7 @@
                     "label": "end_date_prescription_anticoagulants_dt",
                     "description": "end date of prescription for drug in family: anticoagulants",
                     "standard_classification": "ISO 8601",
-                    "format": "Date",
+                    "format": "Datetime",
                     "type": "Date",
                     "units": "",
                     "requirement_level": "Required",
@@ -704,9 +709,9 @@
                     "requirement_level": "Required",
                     "characteristic": "Observed",
                     "catalog_bl": false,
-                    "transformations_from_origin": "",
+                    "transformations_from_origin": "(0 - No prescription (FALSE), 1 - prescription (TRUE))",
                     "possible_data_source": "E-RECETA",
-                    "observations_comments": "see definition of fibrinolysis in 'antiarrhythmics_prescription_bl_def' tab",
+                    "observations_comments": "see definition in 'patient_atc_code_antiarrhythmic_cd' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
                     "examples": "",
                     "catalog": null
                 },
@@ -721,8 +726,8 @@
                     "characteristic": "Observed",
                     "catalog_bl": true,
                     "transformations_from_origin": "",
-                    "possible_data_source": "",
-                    "observations_comments": "E-RECETA",
+                    "possible_data_source": "E-RECETA",
+                    "observations_comments": "",
                     "examples": "",
                     "catalog": {
                         "column_name": "code",
@@ -733,7 +738,7 @@
                     "label": "start_date_prescription_antiarrhythmic_dt",
                     "description": "start date of the prescription of the drug of the family: antiarrhythmic drugs",
                     "standard_classification": "ISO 8601",
-                    "format": "Date",
+                    "format": "Datetime",
                     "type": "Date",
                     "units": "",
                     "requirement_level": "Required",
@@ -749,7 +754,7 @@
                     "label": "end_date_prescription_antiarrhythmic_dt",
                     "description": "end date of prescription of drug of the family: antiarrhythmic drugs",
                     "standard_classification": "ISO 8601",
-                    "format": "Date",
+                    "format": "Datetime",
                     "type": "Date",
                     "units": "",
                     "requirement_level": "Required",
@@ -771,9 +776,9 @@
                     "requirement_level": "Required",
                     "characteristic": "Observed",
                     "catalog_bl": false,
-                    "transformations_from_origin": "(0 - No prescription, 1 - prescription)",
+                    "transformations_from_origin": "(0 - No prescription (FALSE), 1 - prescription (TRUE))",
                     "possible_data_source": "E-RECETA",
-                    "observations_comments": "see crosswalks for the definition of 'antihypertensive_prescription_bl' in the 'atc_antihypertensive_code_def' tab",
+                    "observations_comments": "see definition in 'patient_atc_code_antihypertensive_cd' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
                     "examples": "",
                     "catalog": null
                 },
@@ -800,7 +805,7 @@
                     "label": "start_date_prescription_antihypertensive_dt",
                     "description": "start date of the prescription of the drug of the family: antihypertensive drugs",
                     "standard_classification": "ISO 8601",
-                    "format": "Date",
+                    "format": "Datetime",
                     "type": "Date",
                     "units": "",
                     "requirement_level": "Required",
@@ -816,7 +821,7 @@
                     "label": "end_date_prescription_antihypertensive_dt",
                     "description": "end date of prescription of drug in family: antihypertensive drugs",
                     "standard_classification": "ISO 8601",
-                    "format": "Date",
+                    "format": "Datetime",
                     "type": "Date",
                     "units": "",
                     "requirement_level": "Required",
@@ -838,9 +843,9 @@
                     "requirement_level": "Required",
                     "characteristic": "Observed",
                     "catalog_bl": false,
-                    "transformations_from_origin": "(0 - No prescription, 1 - prescription)",
+                    "transformations_from_origin": "(0 - No prescription (FALSE), 1 - prescription (TRUE))",
                     "possible_data_source": "E-RECETA",
-                    "observations_comments": "see crosswalks for the definition of 'antiaggregants_prescription_bl' in the 'atc_code_antiaggregants_cd' tab",
+                    "observations_comments": "see definition in 'patient_atc_code_antiaggregants_cd' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
                     "examples": "",
                     "catalog": null
                 },
@@ -867,7 +872,7 @@
                     "label": "start_date_prescription_antiaggregants_dt",
                     "description": "start date of prescription of drug of the family: antiaggregants",
                     "standard_classification": "ISO 8601",
-                    "format": "Date",
+                    "format": "Datetime",
                     "type": "Date",
                     "units": "",
                     "requirement_level": "Required",
@@ -883,7 +888,7 @@
                     "label": "end_date_prescription_antiaggregants_dt",
                     "description": "end date of prescription of drug in the family: antiaggregants",
                     "standard_classification": "ISO 8601",
-                    "format": "Date",
+                    "format": "Datetime",
                     "type": "Date",
                     "units": "",
                     "requirement_level": "Required",
@@ -905,9 +910,9 @@
                     "requirement_level": "Required",
                     "characteristic": "Observed",
                     "catalog_bl": false,
-                    "transformations_from_origin": "(0 - No prescription, 1 - prescription)",
+                    "transformations_from_origin": "(0 - No prescription (FALSE), 1 - prescription (TRUE))",
                     "possible_data_source": "E-RECETA",
-                    "observations_comments": "see crosswalks for the definition of 'fibrinolitics_prescriptions_bl' in the 'atc_code_fibrinolitics_cd' tab",
+                    "observations_comments": "see definition in 'patient_atc_code_fibrinolitics_cd' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
                     "examples": "",
                     "catalog": null
                 },
@@ -950,7 +955,7 @@
                     "label": "nihss_score_date_dt",
                     "description": "date on which nihss was calculated",
                     "standard_classification": "ISO 8601",
-                    "format": "Date",
+                    "format": "Datetime",
                     "type": "Date",
                     "units": "",
                     "requirement_level": "Required",
@@ -982,7 +987,7 @@
                     "label": "modified_rankin_scale_dt",
                     "description": "date on which mrs is calculated for you",
                     "standard_classification": "Modified Rankin Scale (mRS)  (see link to the standard at 'observations')",
-                    "format": "Date",
+                    "format": "Datetime",
                     "type": "Date",
                     "units": "",
                     "requirement_level": "Required",
@@ -1014,7 +1019,7 @@
                     "label": "barthel_index_dt",
                     "description": "date on which the barthel index is calculated.",
                     "standard_classification": "ISO 8601",
-                    "format": "Date",
+                    "format": "Datetime",
                     "type": "Date",
                     "units": "",
                     "requirement_level": "Required",
@@ -1051,12 +1056,15 @@
                     "units": "",
                     "requirement_level": "Required",
                     "characteristic": "Observed",
-                    "catalog_bl": false,
-                    "transformations_from_origin": "",
+                    "catalog_bl": true,
+                    "transformations_from_origin": "(0 - FALSE, 1 - TRUE)",
                     "possible_data_source": "CMBD",
-                    "observations_comments": "see crosswalks for the definition of 'heart_failure_bl' in the 'heart_failure_bl_def' tab",
+                    "observations_comments": "see definition in 'patient_heart_failure_bl' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
                     "examples": "",
-                    "catalog": null
+                    "catalog": {
+                        "column_name": "code",
+                        "filename": "cat_heart_failure_bl.csv"
+                    }
                 },
                 {
                     "label": "hypertension_bl",
@@ -1067,12 +1075,15 @@
                     "units": "",
                     "requirement_level": "Required",
                     "characteristic": "Observed",
-                    "catalog_bl": false,
-                    "transformations_from_origin": "",
+                    "catalog_bl": true,
+                    "transformations_from_origin": "(0 - FALSE, 1 - TRUE)",
                     "possible_data_source": "CMBD",
-                    "observations_comments": "see crosswalks for the definition of 'hypertension_bl' in the 'hypertension_bl_def' tab",
+                    "observations_comments": "see definition in 'patient_hypertension_bl' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
                     "examples": "",
-                    "catalog": null
+                    "catalog": {
+                        "column_name": "code",
+                        "filename": "cat_hypertension_bl.csv"
+                    }
                 },
                 {
                     "label": "diabetes_bl",
@@ -1083,12 +1094,15 @@
                     "units": "",
                     "requirement_level": "Required",
                     "characteristic": "Observed",
-                    "catalog_bl": false,
-                    "transformations_from_origin": "",
+                    "catalog_bl": true,
+                    "transformations_from_origin": "(0 - FALSE, 1 - TRUE)",
                     "possible_data_source": "CMBD",
-                    "observations_comments": "see crosswalks for the definition of 'diabetes_bl' in the 'diabetes_bl_def' tab",
+                    "observations_comments": "see definition in 'patient_diabetes_bl' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
                     "examples": "",
-                    "catalog": null
+                    "catalog": {
+                        "column_name": "code",
+                        "filename": "cat_diabetes_bl.csv"
+                    }
                 },
                 {
                     "label": "atrial_fibrillation_bl",
@@ -1099,12 +1113,15 @@
                     "units": "",
                     "requirement_level": "Required",
                     "characteristic": "Observed",
-                    "catalog_bl": false,
-                    "transformations_from_origin": "",
+                    "catalog_bl": true,
+                    "transformations_from_origin": "(0 - FALSE, 1 - TRUE)",
                     "possible_data_source": "CMBD",
-                    "observations_comments": "see crosswalks for the definition of 'atrial_fibrillation_bl' in the 'atrial_fibrillation_bl_def' tab",
+                    "observations_comments": "see definition in 'patient_atrial_fibrillation_bl' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
                     "examples": "",
-                    "catalog": null
+                    "catalog": {
+                        "column_name": "code",
+                        "filename": "cat_atrial_fibrillation_bl.csv"
+                    }
                 },
                 {
                     "label": "valvular_disease_bl",
@@ -1115,12 +1132,15 @@
                     "units": "",
                     "requirement_level": "Required",
                     "characteristic": "Observed",
-                    "catalog_bl": false,
-                    "transformations_from_origin": "",
+                    "catalog_bl": true,
+                    "transformations_from_origin": "(0 - FALSE, 1 - TRUE)",
                     "possible_data_source": "CMBD",
-                    "observations_comments": "see crosswalks for the definition of 'valvular_disease_bl' in the 'valvular_disease_bl_def' tab",
+                    "observations_comments": "see definition in 'patient_valvular_disease_bl' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
                     "examples": "",
-                    "catalog": null
+                    "catalog": {
+                        "column_name": "code",
+                        "filename": "cat_valvular_disease_bl.csv"
+                    }
                 },
                 {
                     "label": "hospital_icu_admission_bl",
@@ -1172,11 +1192,6 @@
                     "description": "Rule for column type_admission_cd"
                 },
                 {
-                    "expression": "hospital_admission_date_dt BETWEEN ''2010-01-01'' AND ''2020-12-31''",
-                    "name": "hospital_admission_date_dt",
-                    "description": "Rule for column hospital_admission_date_dt"
-                },
-                {
                     "expression": "hospital_admission_date_dt <= exitus_dt",
                     "name": "hospital_admission_date_dt",
                     "description": "Rule for column hospital_admission_date_dt"
@@ -1225,11 +1240,6 @@
                     "expression": "socioeconomic_level_cd IN ('1', '2', '3', '4', '5', '6', '7', '8')",
                     "name": "socioeconomic_level_cd",
                     "description": "Rule for column socioeconomic_level_cd"
-                },
-                {
-                    "expression": "admission_emergency_care_dt BETWEEN ''2010-01-01'' AND ''2020-12-31''",
-                    "name": "admission_emergency_care_dt",
-                    "description": "Rule for column admission_emergency_care_dt"
                 },
                 {
                     "expression": "admission_emergency_care_dt <= exitus_dt",
@@ -1297,11 +1307,6 @@
                     "description": "Rule for column anticoagulants_prescriptions_bl"
                 },
                 {
-                    "expression": "start_date_prescription_anticoagulants_dt BETWEEN ''2010-01-01'' AND ''2020-12-31''",
-                    "name": "start_date_prescription_anticoagulants_dt",
-                    "description": "Rule for column start_date_prescription_anticoagulants_dt"
-                },
-                {
                     "expression": "start_date_prescription_anticoagulants_dt <= exitus_dt",
                     "name": "start_date_prescription_anticoagulants_dt",
                     "description": "Rule for column start_date_prescription_anticoagulants_dt"
@@ -1320,11 +1325,6 @@
                     "expression": "antiarrhythmics_prescription_bl IN ('0', '1')",
                     "name": "antiarrhythmics_prescription_bl",
                     "description": "Rule for column antiarrhythmics_prescription_bl"
-                },
-                {
-                    "expression": "start_date_prescription_antiarrhythmic_dt BETWEEN ''2010-01-01'' AND ''2020-12-31''",
-                    "name": "start_date_prescription_antiarrhythmic_dt",
-                    "description": "Rule for column start_date_prescription_antiarrhythmic_dt"
                 },
                 {
                     "expression": "start_date_prescription_antiarrhythmic_dt <= exitus_dt",
@@ -1347,11 +1347,6 @@
                     "description": "Rule for column antihypertensive_prescription_bl"
                 },
                 {
-                    "expression": "start_date_prescription_antihypertensive_dt BETWEEN ''2010-01-01'' AND ''2020-12-31''",
-                    "name": "start_date_prescription_antihypertensive_dt",
-                    "description": "Rule for column start_date_prescription_antihypertensive_dt"
-                },
-                {
                     "expression": "start_date_prescription_antihypertensive_dt <= exitus_dt",
                     "name": "start_date_prescription_antihypertensive_dt",
                     "description": "Rule for column start_date_prescription_antihypertensive_dt"
@@ -1370,11 +1365,6 @@
                     "expression": "antiaggregants_prescription_bl IN ('0', '1')",
                     "name": "antiaggregants_prescription_bl",
                     "description": "Rule for column antiaggregants_prescription_bl"
-                },
-                {
-                    "expression": "start_date_prescription_antiaggregants_dt BETWEEN ''2010-01-01'' AND ''2020-12-31''",
-                    "name": "start_date_prescription_antiaggregants_dt",
-                    "description": "Rule for column start_date_prescription_antiaggregants_dt"
                 },
                 {
                     "expression": "start_date_prescription_antiaggregants_dt <= exitus_dt",

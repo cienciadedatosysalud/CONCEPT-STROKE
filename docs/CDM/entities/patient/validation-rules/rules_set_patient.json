@@ -17,11 +17,6 @@
             "description": "Rule for column type_admission_cd"
         },
         {
-            "expression": "hospital_admission_date_dt BETWEEN ''2010-01-01'' AND ''2020-12-31''",
-            "name": "hospital_admission_date_dt",
-            "description": "Rule for column hospital_admission_date_dt"
-        },
-        {
             "expression": "hospital_admission_date_dt <= exitus_dt",
             "name": "hospital_admission_date_dt",
             "description": "Rule for column hospital_admission_date_dt"
@@ -70,11 +65,6 @@
             "expression": "socioeconomic_level_cd IN ('1', '2', '3', '4', '5', '6', '7', '8')",
             "name": "socioeconomic_level_cd",
             "description": "Rule for column socioeconomic_level_cd"
-        },
-        {
-            "expression": "admission_emergency_care_dt BETWEEN ''2010-01-01'' AND ''2020-12-31''",
-            "name": "admission_emergency_care_dt",
-            "description": "Rule for column admission_emergency_care_dt"
         },
         {
             "expression": "admission_emergency_care_dt <= exitus_dt",
@@ -142,11 +132,6 @@
             "description": "Rule for column anticoagulants_prescriptions_bl"
         },
         {
-            "expression": "start_date_prescription_anticoagulants_dt BETWEEN ''2010-01-01'' AND ''2020-12-31''",
-            "name": "start_date_prescription_anticoagulants_dt",
-            "description": "Rule for column start_date_prescription_anticoagulants_dt"
-        },
-        {
             "expression": "start_date_prescription_anticoagulants_dt <= exitus_dt",
             "name": "start_date_prescription_anticoagulants_dt",
             "description": "Rule for column start_date_prescription_anticoagulants_dt"
@@ -167,34 +152,24 @@
             "description": "Rule for column antiarrhythmics_prescription_bl"
         },
         {
-            "expression": "start_date_prescription_anticarrthymic_dt BETWEEN ''2010-01-01'' AND ''2020-12-31''",
-            "name": "start_date_prescription_anticarrthymic_dt",
-            "description": "Rule for column start_date_prescription_anticarrthymic_dt"
+            "expression": "start_date_prescription_antiarrhythmic_dt <= exitus_dt",
+            "name": "start_date_prescription_antiarrhythmic_dt",
+            "description": "Rule for column start_date_prescription_antiarrhythmic_dt"
         },
         {
-            "expression": "start_date_prescription_anticarrthymic_dt <= exitus_dt",
-            "name": "start_date_prescription_anticarrthymic_dt",
-            "description": "Rule for column start_date_prescription_anticarrthymic_dt"
+            "expression": "end_date_prescription_antiarrhythmic_dt > start_date_prescription_antiarrhythmic_dt",
+            "name": "end_date_prescription_antiarrhythmic_dt",
+            "description": "Rule for column end_date_prescription_antiarrhythmic_dt"
         },
         {
-            "expression": "end_date_prescription_anticarrthymic_dt > start_date_prescription_anticarrthymic_dt",
-            "name": "end_date_prescription_anticarrthymic_dt",
-            "description": "Rule for column end_date_prescription_anticarrthymic_dt"
-        },
-        {
-            "expression": "end_date_prescription_anticarrthymic_dt <= exitus_dt",
-            "name": "end_date_prescription_anticarrthymic_dt",
-            "description": "Rule for column end_date_prescription_anticarrthymic_dt"
+            "expression": "end_date_prescription_antiarrhythmic_dt <= exitus_dt",
+            "name": "end_date_prescription_antiarrhythmic_dt",
+            "description": "Rule for column end_date_prescription_antiarrhythmic_dt"
         },
         {
             "expression": "antihypertensive_prescription_bl IN ('0', '1')",
             "name": "antihypertensive_prescription_bl",
             "description": "Rule for column antihypertensive_prescription_bl"
-        },
-        {
-            "expression": "start_date_prescription_antihypertensive_dt BETWEEN ''2010-01-01'' AND ''2020-12-31''",
-            "name": "start_date_prescription_antihypertensive_dt",
-            "description": "Rule for column start_date_prescription_antihypertensive_dt"
         },
         {
             "expression": "start_date_prescription_antihypertensive_dt <= exitus_dt",
@@ -215,11 +190,6 @@
             "expression": "antiaggregants_prescription_bl IN ('0', '1')",
             "name": "antiaggregants_prescription_bl",
             "description": "Rule for column antiaggregants_prescription_bl"
-        },
-        {
-            "expression": "start_date_prescription_antiaggregants_dt BETWEEN ''2010-01-01'' AND ''2020-12-31''",
-            "name": "start_date_prescription_antiaggregants_dt",
-            "description": "Rule for column start_date_prescription_antiaggregants_dt"
         },
         {
             "expression": "start_date_prescription_antiaggregants_dt <= exitus_dt",

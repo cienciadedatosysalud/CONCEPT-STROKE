@@ -1,7 +1,7 @@
 ---
 title: "CONCEPT STROKE: Analytical pipeline"
 author: Data Science for Health Services and Policy Research (IACS)
-editor: visual
+editor: source
 #date: 
 # bibliography: 
 format: 
@@ -72,10 +72,10 @@ D- Economic evaluation to measure economic impact and efficiency.
 The python libraries used are: 
 
 ```{r}
-Sys.setenv(RETICULATE_PYTHON = "/opt/conda/envs/aspire/bin/python")
-reticulate::use_python("/opt/conda/envs/aspire/bin/python")
-options(reticulate.conda_binary = path.expand("/bin/micromamba"))
-reticulate::use_condaenv(condaenv="/opt/conda/envs/aspire", conda="/opt/conda/envs/aspire/conda")
+# Sys.setenv(RETICULATE_PYTHON = "/opt/conda/envs/aspire/bin/python")
+# reticulate::use_python("/opt/conda/envs/aspire/bin/python")
+# options(reticulate.conda_binary = path.expand("/bin/micromamba"))
+# reticulate::use_condaenv(condaenv="/opt/conda/envs/aspire", conda="/opt/conda/envs/aspire/conda")
 
 ```
 
@@ -83,6 +83,8 @@ reticulate::use_condaenv(condaenv="/opt/conda/envs/aspire", conda="/opt/conda/en
 ```{python}
 #| label: Load packages python
 
+# new import
+import random
 import pm4py, datetime, subprocess
 import pandas as pd
 import numpy as np
@@ -113,14 +115,14 @@ from pm4py.visualization.dfg import visualizer as dfg_visualization
 
 # misc
 from pm4py.objects.conversion.dfg import converter as dfg_mining
+from pm4py.visualization.petri_net import visualizer
+from pm4py.algo.decision_mining import algorithm as decision_mining
 #from pm4py.objects.conversion.process_tree import converter as pt_converter
 
 ```
 
 ```{python,  echo = FALSE}
 #| label: set date columns
-
-
 ##### All date columns
 date_columns = ['hospital_admission_date_dt',
                     'hospital_intervention_date_dt',
@@ -169,7 +171,6 @@ library(processpredictR)
 library(keras)
 library(tensorflow)
 
-
 ```
 
 
@@ -184,19 +185,21 @@ The function created to convert the DataFrame into an Event Log and save the fig
 
 ```{python}
 #| label: import csv and convert to event log
-def import_csv_and_convert_to_event_log(database_path):
+def import_csv_and_convert_to_event_log(data_path):
     
     #df = pd.read_csv(file_path, sep='|',parse_dates=date_columns)
     con = duckdb.connect('../../inputs/data.duckdb')
     df = con.sql("SELECT * from main.patient").df()
+    ## TO use this columns in some models and decision mining
+    df[['hospital_cd','healthcare_area_cd','socioeconomic_level_cd','modified_rankin_scale_cd']] = df[['hospital_cd','healthcare_area_cd','socioeconomic_level_cd','modified_rankin_scale_cd']].apply(lambda x: pd.to_numeric(x, errors = 'coerce'))
+    df.replace({False: 0, True: 1}, inplace = True)
     df_origin = df
     df = df.loc[:,df.columns.str.contains('patient_id|_dt') & ~df.columns.str.contains('prescription|exitus')]
     df = pd.melt(df, id_vars='patient_id')
     # Sort df by time
     df.sort_values(['patient_id', 'value'], ascending=[False, True],inplace=True)
     df.dropna(inplace = True)
-    df.rename(columns={'value': 'time:timestamp', 'patient_id': 'case:concept:name', 'variable': 'concept:name'},
-                     inplace=True)
+    df.rename(columns={'value': 'time:timestamp', 'patient_id': 'case:concept:name', 'variable': 'concept:name'},inplace=True)
 
     # Convert to a event log object
     event_log_:pm4py.objects.log.obj.EventLog = log_converter.apply(df)
@@ -208,9 +211,7 @@ def import_csv_and_convert_to_event_log(database_path):
         event_list = ','.join(event_list)
         result.append({
             'patient_id':patient_id,
-            'trace': event_list
-        })
-
+            'trace': event_list})
     result = pd.DataFrame(result)
     unique_traces = result.groupby(['trace']).size().reset_index(name='freq_trace')
     result = result.merge(unique_traces, on='trace', how='left')
@@ -233,7 +234,7 @@ def import_csv_and_convert_to_event_log(database_path):
 ```{python, echo = FALSE, warning = FALSE, output = FALSE}
 #| label: create_event_log_df
 
-event_log, traces, freq_traces, df = import_csv_and_convert_to_event_log("../inputs/data.duckdb")
+event_log, traces, freq_traces, df = import_csv_and_convert_to_event_log("../../inputs/data.duckdb")
 
 ```
 
@@ -426,29 +427,30 @@ The function to do this is shown in the code block below:
 #| label: decision mining
 
 
-def decision_mining(df,event_log,point):
+def get_decision_mining(df,event_log,point):
     df_carac = df[['patient_id','age_nm','sex_cd','hospital_cd','healthcare_area_cd','zip_code_cd',
                    'municipality_code_cd','type_admission_cd','heart_failure_bl','atc_code_antiaggregants_cd',
                    'barthel_index_nm']]
     event_carac = event_log.merge(df_carac, left_on='case:concept:name', right_on='patient_id', how='left')
     event_carac['org:resource'] = ''
     
-    np.random.seed(10)
-
+    
+    np.random.seed(1234)
     remove_n = 5000
     drop_indices = np.random.choice(event_carac.index, remove_n, replace=False)
     event_carac = event_carac.drop(drop_indices)
-    net, im, fm = pm4py.discover_petri_net_inductive(event_carac)
-    from pm4py.visualization.petri_net import visualizer
+    net, im, fm = pm4py.discover_petri_net_inductive(event_carac, noise_threshold=0.1)
+
     gviz = visualizer.apply(net, im, fm, parameters={visualizer.Variants.WO_DECORATION.value.Parameters.DEBUG: True})
     visualizer.view(gviz)
     visualizer.save(gviz,'../../outputs/decision_mining_petri.png')
     gviz = visualizer.apply(net, im, fm)
     visualizer.save(gviz,'../../outputs/decision_mining_petri_act.png')
     visualizer.view(gviz)
-    from pm4py.algo.decision_mining import algorithm as decision_mining
+    random.seed(1234)
+    
     X, y, class_names = decision_mining.apply(event_carac, net, im, fm, decision_point=point)
-    from pm4py.algo.decision_mining import algorithm as decision_mining
+    
     clf, feature_names, classes = decision_mining.get_decision_tree(event_carac, net, im, fm, decision_point=point)
     #from pm4py.visualization.decisiontree import visualizer as tree_visualizer
     #gviz = tree_visualizer.apply(clf, feature_names, classes)
@@ -512,7 +514,7 @@ The function to do this is shown in the code block below:
   
   
   #### MODEL ####
-   
+  set.seed(1234)
   split <- df %>% split_train_test(split = 0.8)
   
               
@@ -580,7 +582,7 @@ def pred_trayec_completas(traces, freq_traces, df):
     x1 = pd.get_dummies(x, columns=cat_features)
     model = LogisticRegression(multi_class='multinomial', solver='lbfgs')
 
-    X_train, X_test, y_train, y_test = train_test_split(x1, y, test_size=0.2, random_state=1)
+    X_train, X_test, y_train, y_test = train_test_split(x1, y, test_size=0.2, random_state=1234)
     model.fit(X_train,y_train)
     y_pred = model.predict(X_test)
 
@@ -590,7 +592,7 @@ def pred_trayec_completas(traces, freq_traces, df):
    
 
     # define the model evaluation procedure
-    cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=1)
+    cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=1234)
     # evaluate the model and collect the scores
     n_scores = cross_val_score(model, x1, y, scoring='accuracy', cv=cv, n_jobs=-1)
     # report the model performance
@@ -613,10 +615,8 @@ def survival_analysis(df_filtered):
     df_filtered['status'] = True
     df_filtered.loc[df_filtered['exitus_dt'].isna(), 'status'] = False
 
-    df_filtered['survival_in_days'] = (pd.to_datetime(end_study) - df_filtered[
-        'admission_emergency_care_dt']) / np.timedelta64(1, 'D')
-    df_filtered.loc[df_filtered['exitus_dt'].notna(), 'survival_in_days'] = (df_filtered['exitus_dt'] - df_filtered[
-        'admission_emergency_care_dt']) / np.timedelta64(1, 'D')
+    df_filtered['survival_in_days'] = (pd.to_datetime(end_study) - df_filtered['admission_emergency_care_dt']) / np.timedelta64(1, 'D')
+    df_filtered.loc[df_filtered['exitus_dt'].notna(), 'survival_in_days'] = (df_filtered['exitus_dt'] - df_filtered['admission_emergency_care_dt']) / np.timedelta64(1, 'D')
 
     fig, ax = plt.subplots()
     kmf = KaplanMeierFitter()
@@ -744,7 +744,7 @@ First, we imported and converted our DataFrame to an Event Log and check dates.
 ```{python, echo = FALSE, warning = FALSE, output = FALSE}
 #| label: main code
 
-event_log, traces, freq_traces, df = import_csv_and_convert_to_event_log("../inputs/data.duckdb")
+event_log, traces, freq_traces, df = import_csv_and_convert_to_event_log("../../inputs/data.duckdb")
 
 print(event_log)
 
@@ -877,7 +877,7 @@ First we created a petri net with the inductive algorithm that will allow us to 
 ```{python, echo = FALSE, warning = FALSE, output = FALSE}
 #| label: decision mining results
 
-event_carac, tree_importances = decision_mining(df,event_log,point='p_9')
+event_carac, tree_importances = get_decision_mining(df,event_log,point='p_9')
 
 ```
 
@@ -944,20 +944,11 @@ df_traces_pred, y_pred, model = pred_trayec_completas(traces, freq_traces, df)
 
 The kaplan-meier curves for the 10 most common pathways and the cox model summary are shown.
 
-```{python, echo = FALSE, warning = FALSE}
+```{python, echo = FALSE, warning = FALSE, fig.cap="Survival analysis"}
 #| label: survival analysis results
 
 df_surv = survival_analysis(df_filtered)
-
-
 ```
-
-```{r, echo = FALSE, warning = FALSE, out.width = "720px", fig.cap="Survival analysis"}
-#| label: fig-survival_analysis_results
-
-include_graphics('../../outputs/surv_analysis.png')
-```
-
 
 
 ### C- GAMM model
