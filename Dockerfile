@@ -35,6 +35,9 @@ ENV RETICULATE_PYTHON=/opt/conda/envs/aspire/bin/python
 RUN micromamba run -n aspire pip install pm4py
 
 COPY --chown=$MAMBA_USER:$MAMBA_USER . /home/$MAMBA_USER/projects/concept-stroke
+COPY --chown=$MAMBA_USER:$MAMBA_USER main_logo.png /temp/main_logo.png
+
+RUN cp /temp/main_logo.png $(find front -name main_logo**)
 
 ENV APP_PORT=3000
 ENV APP_HOST=0.0.0.0

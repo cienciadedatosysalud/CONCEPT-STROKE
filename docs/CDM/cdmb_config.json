@@ -1,15 +1,15 @@
 {
-    "created_dt": "20230913151748_cdmb",
-    "uuid": "daccc614-5646-4894-8677-3c479c7b893f",
+    "created_dt": "20230927123911_cdmb",
+    "uuid": "8268ef4a-24e2-4710-8680-2f3b402c3f6d",
     "metadata": {
-        "uuid": "c292aff6-80cd-463e-bb9a-19003710cd67",
+        "uuid": "467dd3ce-7bda-4505-b305-16682c603c77",
         "project": "CONCEPT-STROKE",
         "funder": "This project has received funding from the Instituto de Salud Carlos III under grant agreement (PI19/00154; PI19/00306; PI19/00381; PI19/00056; PI 20/00783). The project also received a research grant from Instituto de Salud Carlos III, Ministry of Science and Innovation (Spain), awarded on thecall for the creation of Health Outcomes-Oriented Cooperative Research Networks (RICORS), with reference RD21/0016/0016, co-funded with European Union – NextGenerationEU funds.",
         "url_project": "https://atlasvpm.org/concept-demo/#_ftn1",
         "work_package": "WP1",
         "use_case": "CONCEPT-STROKE",
         "document": "",
-        "version_sem": "1.2.2",
+        "version_sem": "1.2.3",
         "authors": [
             {
                 "name": "Martínez-Lizaga, Natalia",
@@ -63,7 +63,7 @@
     },
     "entities": [
         {
-            "uuid": "b8052232-89c5-4869-b09e-1c35d36baafb",
+            "uuid": "25a361d7-f7b5-450f-ab75-c5070ad34732",
             "name": "patient",
             "time_varying": false,
             "variables": [
@@ -304,7 +304,7 @@
                     "catalog": null
                 },
                 {
-                    "label": "inhospital_trombectomy_bl",
+                    "label": "inhospital_thrombectomy_bl",
                     "description": "performance of procedure in hospital episode: mechanical endovascular thrombectomy",
                     "standard_classification": "",
                     "format": "Boolean",
@@ -315,11 +315,11 @@
                     "catalog_bl": true,
                     "transformations_from_origin": "(0 - FALSE, 1 - TRUE)",
                     "possible_data_source": "CMBD",
-                    "observations_comments": "see definition in 'patient_inhospital_trombectomy_bl' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
+                    "observations_comments": "see definition in 'patient_inhospital_thrombectomy_bl' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
                     "examples": "",
                     "catalog": {
                         "column_name": "code",
-                        "filename": "cat_inhospital_trombectomy_bl.csv"
+                        "filename": "cat_inhospital_thrombectomy_bl.csv"
                     }
                 },
                 {
