@@ -1,15 +1,15 @@
 {
-    "created_dt": "20230927123911_cdmb",
-    "uuid": "8268ef4a-24e2-4710-8680-2f3b402c3f6d",
+    "created_dt": "20231031155841_cdmb",
+    "uuid": "05ac946c-b9bc-4868-823a-43e3d99fddca",
     "metadata": {
-        "uuid": "467dd3ce-7bda-4505-b305-16682c603c77",
+        "uuid": "a7e5bff8-ffcb-41bc-a2f6-c12b10f29cbe",
         "project": "CONCEPT-STROKE",
         "funder": "This project has received funding from the Instituto de Salud Carlos III under grant agreement (PI19/00154; PI19/00306; PI19/00381; PI19/00056; PI 20/00783). The project also received a research grant from Instituto de Salud Carlos III, Ministry of Science and Innovation (Spain), awarded on thecall for the creation of Health Outcomes-Oriented Cooperative Research Networks (RICORS), with reference RD21/0016/0016, co-funded with European Union – NextGenerationEU funds.",
         "url_project": "https://atlasvpm.org/concept-demo/#_ftn1",
         "work_package": "WP1",
         "use_case": "CONCEPT-STROKE",
         "document": "",
-        "version_sem": "1.2.3",
+        "version_sem": "1.2.4",
         "authors": [
             {
                 "name": "Martínez-Lizaga, Natalia",
@@ -57,13 +57,13 @@
         "inclusion_criteria": "Patients 18 years or older admitted to emergency care services (or with an unplanned admission to hospital) with a principal diagnosis of acute ischemic stroke (AIS) during the study period",
         "exclusion_criteria": "Patients 17 years or younger; Patients with a diagnosis of acute hemorragic stroke or with other non-specific stroke diagnoses (i.e. transient ischemic attack - TIA)",
         "beggining_study_period": "2010-01-01",
-        "end_study_period": "2020-12-31",
+        "end_study_period": "2022-12-30",
         "cohort_definition_inclusion": null,
         "cohort_definition_exclusion": null
     },
     "entities": [
         {
-            "uuid": "25a361d7-f7b5-450f-ab75-c5070ad34732",
+            "uuid": "d53fbafc-696e-4803-94df-fe42d1d3bc69",
             "name": "patient",
             "time_varying": false,
             "variables": [
@@ -644,7 +644,7 @@
                     "catalog_bl": false,
                     "transformations_from_origin": "(0 - No prescription (FALSE), 1 - prescription (TRUE))",
                     "possible_data_source": "E-RECETA",
-                    "observations_comments": "see definition in 'patient_atc_code_anticoagulants_cd' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
+                    "observations_comments": "see definition in 'patient_atc_code_anticoagulants_cd' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found at the time of admission.",
                     "examples": "",
                     "catalog": null
                 },
@@ -711,7 +711,7 @@
                     "catalog_bl": false,
                     "transformations_from_origin": "(0 - No prescription (FALSE), 1 - prescription (TRUE))",
                     "possible_data_source": "E-RECETA",
-                    "observations_comments": "see definition in 'patient_atc_code_antiarrhythmic_cd' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
+                    "observations_comments": "see definition in 'patient_atc_code_antiarrhythmic_cd' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found at the time of admission.",
                     "examples": "",
                     "catalog": null
                 },
@@ -778,7 +778,7 @@
                     "catalog_bl": false,
                     "transformations_from_origin": "(0 - No prescription (FALSE), 1 - prescription (TRUE))",
                     "possible_data_source": "E-RECETA",
-                    "observations_comments": "see definition in 'patient_atc_code_antihypertensive_cd' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
+                    "observations_comments": "see definition in 'patient_atc_code_antihypertensive_cd' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found at the time of admission.",
                     "examples": "",
                     "catalog": null
                 },
@@ -845,7 +845,7 @@
                     "catalog_bl": false,
                     "transformations_from_origin": "(0 - No prescription (FALSE), 1 - prescription (TRUE))",
                     "possible_data_source": "E-RECETA",
-                    "observations_comments": "see definition in 'patient_atc_code_antiaggregants_cd' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
+                    "observations_comments": "see definition in 'patient_atc_code_antiaggregants_cd' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found at the time of admission.",
                     "examples": "",
                     "catalog": null
                 },
@@ -912,7 +912,7 @@
                     "catalog_bl": false,
                     "transformations_from_origin": "(0 - No prescription (FALSE), 1 - prescription (TRUE))",
                     "possible_data_source": "E-RECETA",
-                    "observations_comments": "see definition in 'patient_atc_code_fibrinolitics_cd' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
+                    "observations_comments": "see definition in 'patient_atc_code_fibrinolitics_cd' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found at the time of admission.",
                     "examples": "",
                     "catalog": null
                 },
@@ -1011,7 +1011,7 @@
                     "catalog_bl": false,
                     "transformations_from_origin": "",
                     "possible_data_source": "OMI-AP (DGP)",
-                    "observations_comments": "R.D. 174/2011 (https://www.boe.es/buscar/doc.php?id=BOE-A-2011-3174)",
+                    "observations_comments": "Barthel index value is that measured at any time after discharge from the emergency or hospitalisation of the episode of suspected stroke. The Barthel value is intended to be used as a functional outcome measure in addition to mortality. R.D. 174/2011 (https://www.boe.es/buscar/doc.php?id=BOE-A-2011-3174)",
                     "examples": "",
                     "catalog": null
                 },
@@ -1059,7 +1059,7 @@
                     "catalog_bl": true,
                     "transformations_from_origin": "(0 - FALSE, 1 - TRUE)",
                     "possible_data_source": "CMBD",
-                    "observations_comments": "see definition in 'patient_heart_failure_bl' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
+                    "observations_comments": "see definition in 'patient_heart_failure_bl' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found.",
                     "examples": "",
                     "catalog": {
                         "column_name": "code",
@@ -1078,7 +1078,7 @@
                     "catalog_bl": true,
                     "transformations_from_origin": "(0 - FALSE, 1 - TRUE)",
                     "possible_data_source": "CMBD",
-                    "observations_comments": "see definition in 'patient_hypertension_bl' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
+                    "observations_comments": "see definition in 'patient_hypertension_bl' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found.",
                     "examples": "",
                     "catalog": {
                         "column_name": "code",
@@ -1097,7 +1097,7 @@
                     "catalog_bl": true,
                     "transformations_from_origin": "(0 - FALSE, 1 - TRUE)",
                     "possible_data_source": "CMBD",
-                    "observations_comments": "see definition in 'patient_diabetes_bl' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
+                    "observations_comments": "see definition in 'patient_diabetes_bl' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found.",
                     "examples": "",
                     "catalog": {
                         "column_name": "code",
@@ -1116,7 +1116,7 @@
                     "catalog_bl": true,
                     "transformations_from_origin": "(0 - FALSE, 1 - TRUE)",
                     "possible_data_source": "CMBD",
-                    "observations_comments": "see definition in 'patient_atrial_fibrillation_bl' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
+                    "observations_comments": "see definition in 'patient_atrial_fibrillation_bl' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found.",
                     "examples": "",
                     "catalog": {
                         "column_name": "code",
@@ -1135,7 +1135,7 @@
                     "catalog_bl": true,
                     "transformations_from_origin": "(0 - FALSE, 1 - TRUE)",
                     "possible_data_source": "CMBD",
-                    "observations_comments": "see definition in 'patient_valvular_disease_bl' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found",
+                    "observations_comments": "see definition in 'patient_valvular_disease_bl' tab, but, as a boolean variable it can only have the values: TRUE/FALSE. Value is TRUE if any of the codes present in the above-mentioned tab are found.",
                     "examples": "",
                     "catalog": {
                         "column_name": "code",

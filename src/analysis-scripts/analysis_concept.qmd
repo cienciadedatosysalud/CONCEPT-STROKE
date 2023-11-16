@@ -16,6 +16,8 @@ execute:
   warning: false
   cache: false
   echo: false
+params:
+    data_path: '../../inputs/data.duckdb'
 ---
 
 ```{css, echo = FALSE}
@@ -80,389 +82,47 @@ D- Economic evaluation to measure economic impact and efficiency.
 ```{python}
 #| label: Load packages python
 
-# new import
-import random
-import pm4py, datetime, subprocess
-import pandas as pd
-import numpy as np
-import duckdb
-#from pygam import PoissonGAM, LinearGAM, s, f, te, l
-# from sksurv.nonparametric import kaplan_meier_estimator
-import matplotlib.pyplot as plt
-from tabulate import tabulate
-from lifelines import KaplanMeierFitter, CoxPHFitter
-from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import RepeatedStratifiedKFold
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-from pm4py.objects.conversion.log import converter as log_converter
-
-# process mining
-from pm4py import PetriNet
-from pm4py.algo.discovery.alpha import algorithm as alpha_miner
-from pm4py.algo.discovery.inductive import algorithm as inductive_miner
-from pm4py.algo.discovery.heuristics import algorithm as heuristics_miner
-from pm4py.algo.discovery.dfg import algorithm as dfg_discovery
-
-# viz
-from pm4py.visualization.petri_net import visualizer as pn_visualizer
-from pm4py.visualization.process_tree import visualizer as pt_visualizer
-from pm4py.visualization.heuristics_net import visualizer as hn_visualizer
-from pm4py.visualization.dfg import visualizer as dfg_visualization
-
-# misc
-from pm4py.objects.conversion.dfg import converter as dfg_mining
-from pm4py.visualization.petri_net import visualizer
-from pm4py.algo.decision_mining import algorithm as decision_mining
+# # new import
+# import random
+# import pm4py, datetime, subprocess
+# import pandas as pd
+# import numpy as np
+# import duckdb
+# #from pygam import PoissonGAM, LinearGAM, s, f, te, l
+# # from sksurv.nonparametric import kaplan_meier_estimator
+# import matplotlib.pyplot as plt
+# from lifelines import KaplanMeierFitter, CoxPHFitter
+# from sklearn.linear_model import LogisticRegression
+# from sklearn.model_selection import train_test_split
+# from sklearn.model_selection import cross_val_score
+# from sklearn.model_selection import RepeatedStratifiedKFold
+# from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+# from pm4py.objects.conversion.log import converter as log_converter
+# 
+# # process mining
+# from pm4py import PetriNet
+# from pm4py.algo.discovery.alpha import algorithm as alpha_miner
+# from pm4py.algo.discovery.inductive import algorithm as inductive_miner
+# from pm4py.algo.discovery.heuristics import algorithm as heuristics_miner
+# from pm4py.algo.discovery.dfg import algorithm as dfg_discovery
+# 
+# # viz
+# from pm4py.visualization.petri_net import visualizer as pn_visualizer
+# from pm4py.visualization.process_tree import visualizer as pt_visualizer
+# from pm4py.visualization.heuristics_net import visualizer as hn_visualizer
+# from pm4py.visualization.dfg import visualizer as dfg_visualization
+# 
+# # misc
+# from pm4py.visualization.petri_net import visualizer
+# from pm4py.algo.decision_mining import algorithm as decision_mining
 
 
 ```
 
-
-
-```{python, output = FALSE, echo = FALSE}
-#| label: python functions
-def import_csv_and_convert_to_event_log(data_path):
-  con = duckdb.connect(data_path)
-  df = con.sql("SELECT * from main.patient").df()
-  ## TO use this columns in some models and decision mining
-  df[['hospital_cd','healthcare_area_cd','socioeconomic_level_cd','modified_rankin_scale_cd']] = df[['hospital_cd','healthcare_area_cd','socioeconomic_level_cd','modified_rankin_scale_cd']].apply(lambda x: pd.to_numeric(x, errors = 'coerce'))
-  df.replace({False: 0, True: 1}, inplace = True)
-  df_origin = df
-  df.loc[df["inhospital_thrombectomy_bl"] == 1, "inhospital_thrombectomy_bl_date_dt"] = df["hospital_intervention_date_dt"]
-  df.loc[df["inhospital_fibrinolysis_bl"] == 1, "inhospital_fibrinolysis_bl_date_dt"] = df["hospital_intervention_date_dt"]
-  df = df.loc[:,df.columns.str.contains('patient_id|_dt') & ~df.columns.str.contains('prescription|exitus')]
-  df = pd.melt(df, id_vars='patient_id')
-  # Sort df by time
-  df.sort_values(['patient_id', 'value'], ascending=[False, True],inplace=True)
-  df.dropna(inplace = True)
-  df.rename(columns={'value': 'time:timestamp', 'patient_id': 'case:concept:name', 'variable': 'concept:name'},inplace=True)
-  # Convert to a event log object
-  event_log_:pm4py.objects.log.obj.EventLog = log_converter.apply(df)
-  result = []
-  for event_ in event_log_:
-      patient_id = event_._attributes['concept:name']
-      event_list = [ac['concept:name'] for ac in event_._list]
-      event_list = ','.join(event_list)
-      result.append({
-          'patient_id':patient_id,
-          'trace': event_list})
-  result = pd.DataFrame(result)
-  unique_traces = result.groupby(['trace']).size().reset_index(name='freq_trace')
-  result = result.merge(unique_traces, on='trace', how='left')
-  unique_traces = unique_traces.sort_values('freq_trace', ascending=False)
-  unique_traces['index_trace'] = np.arange(len(unique_traces)) + 1
- 
-  fig=unique_traces.plot(kind='bar',x = 'index_trace', y = 'freq_trace', figsize=(45, 20), fontsize=16).get_figure()
-  plt.xlabel('Index trace', fontsize = 20)
-  plt.ylabel('Frequency', fontsize = 20)
-  plt.title('Barplot unique traces', fontsize = 24)
-  plt.rc('axes', titlesize=12)  # fontsize of the axes title
-  plt.savefig('../../outputs/barplot_unique_traces.png')
-  plt.close()
-  df_out=df.merge(df_origin, left_on='case:concept:name', right_on='patient_id', how='left')
-  df_out.to_csv('../../outputs/event_log.csv',sep='|', index=False)
-  con.close()
-  return df, result, unique_traces, df_origin
-
-def check_dates_hospital_emergency(df):
-    # emergency
-  emergency_care_admission_date = ['admission_emergency_care_dt',
-                  'triage_emergency_care_dt',
-                  'first_asisstance_medical_dt',
-                  'admission_to_observation_ward_dt',
-                  'internal_neurology_consultation_dt',
-                  'ct_mri_dt',
-                  'thrombolysis_emergency_dt',
-                  'discharge_from_emergency_dt',
-                  'nihss_score_date_dt']
-  df_emergency = df[emergency_care_admission_date]
-  p = ((df_emergency.iloc[:,0:len(emergency_care_admission_date)].values >= df_emergency[['admission_emergency_care_dt']].values) & (df_emergency.iloc[:,
-          0:len(emergency_care_admission_date)].values <= df_emergency[['discharge_from_emergency_dt']].values)).all(axis=1)
-
-  print('There are', np.count_nonzero(p==False), 'errors in emergency dates, if there are errors they may be dates outside the limits or there may be dates without having entered the emergency')
-
-  # hospital
-  hospital_admission_date = ['hospital_admission_date_dt',
-                            'hospital_intervention_date_dt',
-                            'hospital_discharge_date_dt',
-                             'modified_rankin_scale_dt','inhospital_thrombectomy_bl_date_dt','inhospital_fibrinolysis_bl_date_dt']
-  df_hospital = df[hospital_admission_date]
-  p = ((df_hospital.iloc[:,0:len(hospital_admission_date)].values >= df_hospital[['hospital_admission_date_dt']].values) & (df_hospital.iloc[:,
-          0:len(hospital_admission_date)].values <= df_hospital[['hospital_discharge_date_dt']].values)).all(axis=1)
-
-  print('There are', np.count_nonzero(p==False), 'errors in hospital dates, if there are errors they may be dates outside the limits or there are dates without having entered the hospital')
-
-  p = (df.loc[(df['hospital_admission_date_dt'] >= df['admission_emergency_care_dt']) & (df['hospital_admission_date_dt'] < df['discharge_from_emergency_dt'])])
-  print('There are', len(p), 'errors in hospital dates with emergency dates, the hospital admission date is between the emergency admission and discharge date (included).')
-
-
-######## BUILD A PETRI NET ########
-
-def alpha_miner_algorithm(filtered_event_log):
-  net, initial_marking, final_marking = alpha_miner.apply(filtered_event_log)
-  parameters = {pn_visualizer.Variants.FREQUENCY.value.Parameters.FORMAT: "png"}
-  gviz = pn_visualizer.apply(net, initial_marking, final_marking,
-                             parameters=parameters,
-                             variant=pn_visualizer.Variants.FREQUENCY,
-                             log=filtered_event_log)
-  pn_visualizer.save(gviz, "../../outputs/alpha_miner_petri_net.png")
-
-######### BUILD A PETRI NET ########
-def inductive_miner_algorithm(filtered_event_log):
-  tree = inductive_miner.apply(filtered_event_log)
-
-  gviz = pt_visualizer.apply(tree)
-  pn_visualizer.save(gviz, "../../outputs/inductive_miner_tree.png")
-
-  # Convert tree to petri net
-  net, initial_marking, final_marking = pm4py.convert_to_petri_net(tree)
-  gviz = pn_visualizer.apply(net, initial_marking, final_marking)
-  pn_visualizer.save(gviz, "../../outputs/inductive_miner_petri_net.png")
-
-######### BUILD A HEURISTIC NET ########
-def heuristic_miner_algorithm(filtered_event_log):
-  heu_net = heuristics_miner.apply_heu(filtered_event_log, parameters={
-      heuristics_miner.Variants.CLASSIC.value.Parameters.DEPENDENCY_THRESH: 0.99})
-  gviz = hn_visualizer.apply(heu_net)
-  hn_visualizer.save(gviz, "../../outputs/heuristic_miner.png")
-
-
-    ######### BUILD A DFG ########
-def directly_follows_graph(event_log,filtered_event_log):
-  dfg = dfg_discovery.apply(filtered_event_log)
-  gviz = dfg_visualization.apply(dfg, log=filtered_event_log, variant=dfg_visualization.Variants.FREQUENCY)
-  dfg_visualization.save(gviz,"../../outputs/directly_follows_graph_filtered.png")
-    
-  # Convert Directly-Follows Graph to a Workflow Net
-  net, im, fm = dfg_mining.apply(dfg)
-  gviz = pn_visualizer.apply(net, im, fm)
-  pn_visualizer.save(gviz,"../../outputs/workflow_net_filtered.png")
-  
-  dfg = dfg_discovery.apply(event_log)
-  gviz = dfg_visualization.apply(dfg, log=event_log, variant=dfg_visualization.Variants.FREQUENCY)
-  dfg_visualization.save(gviz,"../../outputs/directly_follows_graph.png")
-  
-  # Convert Directly-Follows Graph to a Workflow Net
-  net, im, fm = dfg_mining.apply(dfg)
-  gviz = pn_visualizer.apply(net, im, fm)
-  pn_visualizer.save(gviz,"../../outputs/workflow_net.png")
-
-# filter by most frequent traces
-
-def filter_for_k_freq_traces(event_log, traces, freq_traces, df, k):
-
-  filtered_event_log = pm4py.filter_variants_top_k(event_log, k)
-  traces_filtered = traces[traces['patient_id'].isin(filtered_event_log['case:concept:name'].unique())]
-  freq_traces_filtered = freq_traces[freq_traces['trace'].isin(traces_filtered['trace'].unique())]
-  freq_traces_filtered = freq_traces_filtered.sort_values('freq_trace', ascending = False)
-  freq_traces_filtered['rank_trace'] = np.arange(len(freq_traces_filtered))+1
-  traces_filtered = traces_filtered.merge(freq_traces_filtered, on=['trace','freq_trace'], how='left')
-  df_filtered = df[df['patient_id'].isin(traces_filtered['patient_id'])]
-  df_filtered = df_filtered.merge(traces_filtered[['freq_trace','rank_trace','patient_id']], on = 'patient_id', how = 'left')
-  traces_filtered = traces_filtered.sort_values('rank_trace')
-  traces_filtered.reset_index(drop=True, inplace=True)
-  col_names = ['rank_trace', 'freq_abs', 'freq_rel']
-  data = freq_traces_filtered[['rank_trace','freq_trace']]
-  data['freq_rel'] = (data['freq_trace']*100)/len(df)
-
-  return filtered_event_log, df_filtered, traces_filtered
-
-
-# SIMPLE JACCARD: without regard to the order of activities
-
-def jaccard_similarity(trace_experimental, trace_theory):
-
-  trace_experimental = set(trace_experimental.split(','))
-  trace_theory = set(trace_theory.split(','))
-  # Find the intersection
-  intersection = trace_experimental.intersection(trace_theory)
-  # Find the union
-  union = trace_experimental.union(trace_theory)
-  
-  # Calculate Jaccard similarity score
-  # using length of intersection set divided by length of union set
-  return float(len(intersection)) / len(union)
-
-
-
-##### DECISION MINING #####
-
-
-def get_points(net_:PetriNet):
-  inhospital_fibrinolysis_p:str = None
-  inhospital_thrombectomy_p:str = None
-  thrombolysis_emergency_p:str = None
-  for transition in net_.transitions:
-    
-    if transition.label is not None and transition.label == "thrombolysis_emergency_dt":
-      arc = transition.in_arcs.pop() #return a set
-      thrombolysis_emergency_p = arc.source.name
-      # si es none es un skip
-    if transition.label is not None and transition.label == "inhospital_thrombectomy_bl_date_dt":
-      arc = transition.in_arcs.pop() #return a set
-      inhospital_thrombectomy_p = arc.source.name
-    if transition.label is not None and transition.label == "inhospital_fibrinolysis_bl_date_dt":
-      arc = transition.in_arcs.pop() #return a set
-      inhospital_fibrinolysis_p = arc.source.name
-      if inhospital_fibrinolysis_p is not None and inhospital_thrombectomy_p is not None and thrombolysis_emergency_p is not None:       
-      #if fibrinolysis_p is not None:
-        break
-  # return thrombectomy_p, fibrinolysis_p
-  return inhospital_fibrinolysis_p, inhospital_thrombectomy_p, thrombolysis_emergency_p
-
-
-
-def get_decision_mining(df,event_log):
-  df_carac = df[['patient_id','age_nm','sex_cd','hospital_cd','healthcare_area_cd','zip_code_cd', 'municipality_code_cd','type_admission_cd','heart_failure_bl','atc_code_antiaggregants_cd', 'barthel_index_nm']]
-  event_carac = event_log.merge(df_carac, left_on='case:concept:name', right_on='patient_id', how='left')
-  event_carac['org:resource'] = ''
-  
-  # remove for real data  
-  np.random.seed(1234)
-  remove_n = 2000
-  drop_indices = np.random.choice(event_carac.index, remove_n, replace=False)
-  event_carac = event_carac.drop(drop_indices)
-  net, im, fm = pm4py.discover_petri_net_inductive(event_carac, noise_threshold=0.1)
-  gviz = visualizer.apply(net, im, fm, parameters={visualizer.Variants.WO_DECORATION.value.Parameters.DEBUG: True})
-  visualizer.save(gviz,'../../outputs/decision_mining_petri.png')
-  gviz = visualizer.apply(net, im, fm)
-  visualizer.save(gviz,'../../outputs/decision_mining_petri_act.png')
-  random.seed(1234)
-  point_decision = get_points(net)
-  for point in point_decision:
-   try:
-    clf, feature_names, classes = decision_mining.get_decision_tree(event_carac, net, im, fm, decision_point=point)
-    importances = clf.feature_importances_
-    tree_importances = pd.Series(importances, index=feature_names)
-    fig, ax = plt.subplots()
-    tree_importances.plot.bar(ax=ax)
-    ax.set_title("Feature importances using MDI for point " + point)
-    ax.set_ylabel("Mean decrease in impurity")
-    #fig.tight_layout()
-    fig.savefig('../../outputs/barplot_features_importance_' + point + '.png')
-    plt.close()
-   except ValueError:
-     print('It is not possible to carry out the decision mining process for the item: ' + point)
-     
-  return event_carac, point_decision
-
-
-# Multinomial model to predict complete traces
-
-
-# def pred_trayec_completas(traces, freq_traces, df):
-# 
-#     df_traces_pred = traces.merge(freq_traces, on='trace', how='left')
-#     df_traces_pred = df_traces_pred.loc[df_traces_pred['index_trace'] <= 10]
-# 
-#     
-#     x = df.loc[df['patient_id'].isin(df_traces_pred['patient_id']), df.columns.str.contains('age_nm|sex_cd|ccaa_cd|hospital_st')]
-#     y = df_traces_pred['index_trace']
-# 
-#     cat_features = ["ccaa_cd", "hospital_st"]
-# 
-#     x1 = pd.get_dummies(x, columns=cat_features)
-#     model = LogisticRegression(multi_class='multinomial', solver='lbfgs')
-# 
-#     X_train, X_test, y_train, y_test = train_test_split(x1, y, test_size=0.2, random_state=1234)
-#     model.fit(X_train,y_train)
-#     y_pred = model.predict(X_test)
-# 
-#     cm = confusion_matrix(y_test,y_pred)
-#     disp = ConfusionMatrixDisplay(cm)
-#     disp.plot()
-#    
-# 
-#     # define the model evaluation procedure
-#     cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=1234)
-#     # evaluate the model and collect the scores
-#     n_scores = cross_val_score(model, x1, y, scoring='accuracy', cv=cv, n_jobs=-1)
-#     # report the model performance
-#     print('Mean Accuracy: %.3f (%.3f)' % (np.mean(n_scores), np.std(n_scores)))
-# 
-#     return df_traces_pred, y_pred, model
-
-#### SURVIVAL ANALYSIS ####
-
-def survival_analysis(df_filtered):
-  end_study = datetime.date(year=2021, month=12, day=31)
-
-  df_filtered['status'] = True
-  df_filtered.loc[df_filtered['exitus_dt'].isna(), 'status'] = False
-
-  df_filtered['survival_in_days'] = (pd.to_datetime(end_study) - df_filtered['admission_emergency_care_dt']) / np.timedelta64(1, 'D')
-  df_filtered.loc[df_filtered['exitus_dt'].notna(), 'survival_in_days'] = (df_filtered['exitus_dt'] - df_filtered['admission_emergency_care_dt']) / np.timedelta64(1, 'D')
-
-  fig, ax = plt.subplots()
-  kmf = KaplanMeierFitter()
-  for value in df_filtered['rank_trace'].unique():
-      trace = df_filtered['rank_trace'] == value
-      kmf.fit(durations = df_filtered['survival_in_days'][trace], event_observed=df_filtered['status'][trace], label = 'Rank_trace' + str(value))
-      kmf.plot_survival_function(
-          label=value,
-          ax=ax
-      )
-
-      ax.set(
-          title='Kaplan-Meier survival curves',
-          xlabel='Days',
-          ylabel='Estimated Probability of Survival'
-      )
-
-
-
-  fig.savefig('../../outputs/surv_analysis.png')
-
-
-
-
-  df_filtered1 = df_filtered[['rank_trace', 'survival_in_days', 'status']]
-  dummies_rank_trace = pd.get_dummies(df_filtered1["rank_trace"], prefix='trace')
-  df_filtered1 = pd.concat([df_filtered1, dummies_rank_trace], axis=1)
-  df_filtered1 = df_filtered1.drop("rank_trace", axis=1)
-
-  cph = CoxPHFitter(penalizer=0.1)
-  cph.fit(df_filtered1,duration_col='survival_in_days', event_col='status')
-  cph.print_summary()
-
-
-
-  return df_filtered
-
-##### GENERATE A DF FOR GAMM MODEL #####
-
-
-def df_modelo_gam(df_filtered, filtered_event_log):
-
-  start_study = datetime.date(year=2010, month=1, day=1)
-  end_study = datetime.date(year=2021, month=12, day=31)
-
-
-  df_filtered['period'] = df_filtered['thrombolysis_emergency_dt'].apply(lambda x: 12*((x.year-start_study.year)) + (x.month - start_study.month) + 1)
-
-  for patient in df_filtered['patient_id']:
-      filtered_event_log_ = filtered_event_log[filtered_event_log['case:concept:name'] == patient]
-      filtered_event_log_.reset_index(drop=True, inplace=True)
-      df_filtered.loc[df_filtered['patient_id']==patient,'dur_trace']=(filtered_event_log_['time:timestamp'][len(filtered_event_log_['time:timestamp'])-1] - filtered_event_log_['time:timestamp'][0])/np.timedelta64(1,'D')
-
-  df_filtered['thrombolysis_emergency_bl'] = True
-  df_filtered.loc[df_filtered['thrombolysis_emergency_dt'].isna(), 'exitus_bl'] = False
-  
-  df_filtered.to_csv('../../outputs/df_gam.csv',sep='|', index=False)
-
-  return df_filtered
-
-
-
-
-
-```
 
 ```{r}
 #| label: load r packages
-
+library(duckdb)
 library(dplyr)
 library(knitr)
 library(Hmisc)
@@ -473,8 +133,16 @@ library(purrr)
 library(processpredictR)
 library(keras)
 library(tensorflow)
-
+### new library
+library(survival)
+library(survminer)
+library(stringr)
+library(timeDate)
+library(sjPlot)
+library(forestmodel)
+library(plotly)
 ```
+
 
 
 ### Descriptive analysis
@@ -483,6 +151,9 @@ To study the observed data, we performed a small exploratory analysis of the dat
 
 As part of the exploratory analysis it is interesting to know how many different pathways appear and the frequency of each one. This allows us to know what percentage of the pathways are among the most frequent pathways and which pathways are isolated cases. 
 
+#### Survival analysis
+
+We carried out a survival analysis with the 10 most frequent traces, constructing a Kaplan-Meier curve for each of them for comparison. Subsequently, a COX model was performed to compare these pathways and observe the Hazard Ratio (HR) of each pathway compared to the rest.
 
 ### A- Process Mining
 
@@ -524,61 +195,50 @@ Decision mining allows us to know what are the main characteristics of patients 
 To predict which pathway a given patient should follow based on his or her characteristics, we have used the *bupaR* library, which makes use of a transformer model to predict the pathway as a sequence of activities. Thus, an Event log with features and a transformer model is used to predict the next activity.
 
 
-<!-- Another option is to study and predict what is the most likely complete pathway a patient will follow. With: -->
+### B- Estimation of outcomes within a path
 
-<!-- -   X = independent attributes/variables (e.g. patient characteristics) -->
+A proportional-hazard regression with the scores of propensity of specific paths being the main independent factor in the prediction of survival at 6 and 12 months after admission.
 
-<!-- -   Y = complete pathways (e.g. 10 most frequent pathways) -->
+#### B.1 Kaplan-Meier survival plot
+The kaplan-meier survival plot for the 4 intervention possibilities is shown below:
 
+- None
 
-### B- Survival analysis
+- Fibrinolysis
 
-We carried out a survival analysis with the 10 most frequent traces, constructing a Kaplan-Meier curve for each of them for comparison. Subsequently, a COX model was performed to compare these pathways and observe the Hazard Ratio (HR) of each pathway compared to the rest.
+- Thrombectomy mechanic
 
-
-### C- GAMM model
-
-Generalised additive mixed model (GAMM) with smoothed interaction between period (month) and intervention (reperfusion) and trace as an aggregation factor at the second level. Then, generate two new variables:
-
--   Duration of the trace for each patient.
--   Period in which the intervention took place.
+- Combined (fibrinolyisis + thrombectomy mechanic)
 
 
-```{r, warning=FALSE, output = FALSE}
-#| label: gamm model
+#### B.2 General COX model
 
-model_gam <- function(file){
-df_gam <- read.csv(file = file, sep = '|') %>% dplyr::select(!contains(c('patient_id',"_dt", 'atc')))
-df_gam$thrombolysis_emergency_bl <- as.integer(as.logical(df_gam$thrombolysis_emergency_bl))
+A COX model is built with the survival object (time = survival time; case = exitus) as the dependent variable and the following variables as independent variables: 
 
-df_gam1 <- df_gam
-tryCatch(
-        {
+- Categorical: intervention, sex, zip code, hospital, hospital type dicharge, weekday, modified rankin scale, rank trace, holidays, weekend, prescriptions and comorbidities,
 
-  # remove this for real data
-  df_gam1$exitus_bl <- sample(0:1, nrow(df_gam1), replace = TRUE)
-  # remove this for real data
-  df_gam1$thrombolysis_emergency_bl <- sample(0:1, nrow(df_gam1), replace = TRUE)
+- Numerical: age, jaccard similarity measure, duration trace, period, number of admission prior emergency, number of admission prior inhospital.
 
-  model <- gam(exitus_bl ~ thrombolysis_emergency_bl + s(period, by = rank_trace, k = 20) +
-             s(age_nm, k = 20) + s(period, by = thrombolysis_emergency_bl, k = 20) + s(dur_trace) , 
-             data = df_gam1)
-  
-  png("../../outputs/gam_model.png")
-  par(mfrow = c(2, 2))
-  gam.check(model)
-  dev.off()
-        },
-        error=function(cond) {
-            message(paste0("error in model building"))
-        }
-      ) 
+#### B.3 Propension to intervention model
 
-return(model)
-}
+In order to overcome the violation of proportional risk in COX model, 4 different propensity to intervention models are estimated, using as covariables those that have been found to be significant (*pvalue* < 0.05) in the general COX model constructed in the previous section.
+
+1. Propensity to fibrinolysis intervention model,
+
+2. Propensity to thrombectomy mechanic intervention model,
+
+3. Propensity to combined intervention model,
+
+4. Propensity to any intervention model
 
 
-```
+After building the models, the propensity to intervention for each patient is predicted using each model and the propensity score (PS) is calculated according to the formula: $$PS_i = 1/ (1- p(y)_i)$$ 
+where *p(y)* indicates the prediction for each patient *i*.
+
+
+#### B.4 Model to predict exitus with PS as covariable
+
+After calculating the PS for each intervention, a model is constructed for each intervention to predict exitus with the PS of this corresponding intervention as a covariate and finally a general model with the PS of each intervention as covariates and the PS of any intervention as an offset.
 
 ## Results
 
@@ -588,15 +248,20 @@ These results have been carried out with synthetic data previously generated acc
 
 First, we imported and converted our DataFrame to an Event Log and check dates. 
 
+
 ```{python, echo = FALSE, warning = FALSE}
 #| label: main code
 
-event_log, traces, freq_traces, df = import_csv_and_convert_to_event_log("../../inputs/data.duckdb")
+from aux_scripts.create_event_log import import_data_and_convert_to_event_log, check_dates_hospital_emergency, filter_for_k_freq_traces
+data_path = '../../inputs/data.duckdb'
+trace_theory = str('admission_emergency_care_dt,triage_emergency_care_dt,first_asisstance_medical_dt,internal_neurology_consultation_dt,ct_mri_dt,admission_to_observation_ward_dt,thrombolysis_emergency_dt,discharge_from_emergency_dt')
 
-check_dates_hospital_emergency(df)
+
+event_log, traces, freq_traces, df = import_data_and_convert_to_event_log(data_path)
+
+check_dates_hospital_emergency(data_path)
 
 filtered_event_log, df_filtered, traces_filtered = filter_for_k_freq_traces(event_log, traces, freq_traces, df, k=10)
-
 
 ```
 
@@ -608,83 +273,49 @@ As a descriptive measure of the data, a bar plot with the number of distinct tra
 include_graphics('../../outputs/barplot_unique_traces.png')
 ```
 
+#### Survival analysis
+
+The kaplan-meier curves for the 10 most common pathways and the COX model summary are shown.
+
+```{python, echo = FALSE, warning = FALSE, fig.cap="Survival analysis"}
+#| label: survival analysis results
+
+from aux_scripts.survival_descriptive import survival_analysis
+
+survival_analysis(df_filtered)
+
+```
+
+
+```{r, echo = FALSE, warning = FALSE, out.width = "620px", out.height = "520px", fig.cap="Survival descriptive"}
+#| label: fig-survival_descriptive
+
+include_graphics('../../outputs/surv_analysis.png')
+```
+
+
 ### A- Process mining
 
 #### Process discovery
 
-Directly follows graph with all event log pathways:
 
-```{python, echo = FALSE, warning = FALSE, output = FALSE}
-#| label: dfg all results
-
-directly_follows_graph(event_log, filtered_event_log)
-
-```
-
-```{r, echo = FALSE, warning = FALSE, fig.cap="Directly follows graph with all event log pathways"}
-#| label: fig-Directly_follows_graph_all
-
-include_graphics('../../outputs/directly_follows_graph.png')
-```
-
-
-This looks like spaghetti graph, so, in order to reduce the high dimensionality, we filtered the traces to keep only the k (k=10) most frequent traces:
-
-```{r, echo = FALSE, warning = FALSE, fig.cap="Directly follows graph with most frequent pathways"}
-#| label: fig-Directly_follows_graph_most_frequent
-
-include_graphics('../../outputs/directly_follows_graph_filtered.png')
-```
-
-
-Alpha miner with only filtered traces:
-
-```{python, echo = FALSE, warning = FALSE, output = FALSE}
-#| label: alpha miner results
-
-alpha_miner_algorithm(filtered_event_log)
-
-```
-
-
-```{r, echo = FALSE, warning = FALSE, out.width = "3820px",  out.height = "480px",fig.cap="Alpha miner with only filtered traces"}
-#| label: fig-Alpha_miner 
-
-include_graphics('../../outputs/alpha_miner_petri_net.png')
-```
-
-
-Inductive miner with only filtered traces:
+Inductive miner traces:
 
 ```{python, echo = FALSE, warning = FALSE, output = FALSE}
 #| label: Inductive miner results
 
-inductive_miner_algorithm(filtered_event_log)
+from aux_scripts.inductive_miner import inductive_miner_algorithm, get_decision_mining
+
+#inductive_miner_algorithm(filtered_event_log)
+
+point_decision = get_decision_mining(df, event_log)
 
 ```
 
-```{r, echo = FALSE, warning = FALSE, fig.cap="Inductive miner with only filtered traces"}
+```{r, echo = FALSE, warning = FALSE, out.width = "2920px",  out.height = "680px", fig.cap="Inductive miner with only filtered traces"}
 #| label: fig-Inductive_miner
 
 include_graphics('../../outputs/inductive_miner_petri_net.png')
-```
-
-
-
-Heuristic miner with only filtered traces:
-
-```{python, echo = FALSE, warning = FALSE, output = FALSE}
-#| label: Heuristic miner results
-
-heuristic_miner_algorithm(filtered_event_log)
-
-```
-
-
-```{r, echo = FALSE, warning = FALSE, fig.cap="Heuristic miner with only filtered traces"}
-#| label: fig-Heuristic_miner
-
-include_graphics('../../outputs/heuristic_miner.png')
 ```
 
 
@@ -697,35 +328,114 @@ The theorical trace is:
 
 ```{python, echo = FALSE, warning = FALSE}
 #| label: theorical trace 
-trace_theory = str('admission_emergency_care_dt,triage_emergency_care_dt,first_asisstance_medical_dt,'
-                'internal_neurology_consultation_dt,ct_mri_dt,admission_to_observation_ward_dt,thrombolysis_emergency_dt'
-              'discharge_from_emergency_dt')
-print(trace_theory)
+
+from aux_scripts.create_df_estimation_outcomes_df import df_model_estimation_outcomes, jaccard_similarity
+
+#print(trace_theory)
+
+df_model_estimation_outcomes(data_path, df, event_log, traces, freq_traces, trace_theory)
 
 ```
 
-The Jaccard's similarity measured is:
+```{r, echo = FALSE, warning = FALSE,out.width = "1220px", out.height = "320px"}
+#| label: print theorical trace 
+
+### ficticial timestamp, patient_id to print theorical trace 
+init <- ymd_hms('2012-01-04 10:27:02')
+trace_theory_df <- data.frame(activity =c('admission emergency care dt','triage emergency care dt','first asisstance medical dt','internal neurology consultation dt','ct or mri dt','admission to observation ward dt','thrombolysis emergency dt','discharge from emergency dt'))
+trace_theory_df$patient_id <- 'patient_trace_theory'
+trace_theory_df$activity_instance <- 1:nrow(trace_theory_df)
+trace_theory_df$registration_type <- 'completed'
+trace_theory_df$resource_id <- 'employee'
+trace_theory_df$timestamp <- seq(init,init + 60*60*(nrow(trace_theory_df)-1), by='hour')
+p <- trace_theory_df %>% eventlog(case_id = 'patient_id',
+              activity_id = 'activity',
+              activity_instance_id = 'activity_instance',
+              timestamp = 'timestamp',
+              lifecycle_id = 'registration_type',
+              resource_id = 'resource_id')
+
+p %>% process_map()
+
+rm(init,trace_theory_df,p)
+```
+
+
+The Jaccard's similarity measured for k=10 most frequent traces:
+
+```{r, echo = FALSE, warning = FALSE}
+
+con = dbConnect(duckdb::duckdb(), dbdir=params$data_path, read_only=FALSE)
+
+df <- dbGetQuery(conn = con, 'with seleccion_top10 as (SELECT
+		*
+	FROM
+		(
+		SELECT
+			a.*,
+			b.*
+		FROM
+			main.event_log a
+		LEFT JOIN main.prediction_outcomes_db b ON
+			a."case:concept:name" = b.patient_id) a
+	WHERE
+		rank_trace != \'otros\'
+		and rank_trace::int <= 10)
+select * from seleccion_top10 where "case:concept:name" in (select DISTINCT on(rank_trace) "case:concept:name" from seleccion_top10)')
+dbDisconnect(con, shutdown=TRUE)
+
+
+df <- df %>% rename(activity = `concept:name`, timestamp = `time:timestamp`) %>% 
+  select(!ends_with("_dt"))
+
+
+p <- eventlog(df, case_id='patient_id',
+              activity_id = 'activity',
+              activity_instance_id = 'activity_instance',
+              timestamp = 'timestamp',
+              lifecycle_id = 'registration_type',
+              resource_id = 'resource_id')
+# df <- prepare_examples(p, task = "next_activity",
+#                        features = c('hospital_cd','ccaa_cd', 'healthcare_area_cd', 
+#                                     'age_nm', 'sex_cd', 'socioeconomic_level_cd','municipality_code_cd','type_admission_cd','heart_failure_bl','atc_code_antiaggregants_cd', 'barthel_index_nm', 'intervention_bl','intervention'))
+
+
+plot <- p %>%
+    trace_explorer(n_traces = 10, plotly = FALSE,coverage_labels = c('cumulative'),label_size = 0)
+
+plot[["data"]][["facets_cum"]] <- round(plot[["data"]][["jaccard_similarity"]],2)
+
+plot + labs(title='Jaccard similarity measured (10 most frequent traces)') + 
+  theme(title = element_text(size = 10))
+
+```
+
+
+
 
 ```{python, echo = FALSE, warning = FALSE}
 #| label: comparison checking results
 
 # SequenceMatcher(None, traces_filtered['trace'][0], trace_theory).ratio()
-for i in range(len(traces_filtered['trace'].unique())):
-    p = round(jaccard_similarity(traces_filtered['trace'].unique()[i], trace_theory),2)
-    print(p)
+# for i in range(len(traces_filtered['trace'].unique())):
+#     p = round(jaccard_similarity(traces_filtered['trace'].unique()[i], trace_theory),2)
+#     print(p)
 
 ```
+
+Also shown below is the histogram of the Jaccard similarity of the patient traces compared to the theoretical one
+
+```{r, echo = FALSE, warning = FALSE, out.width = "680px",  out.height = "520px", fig.cap="Petri net wiht points for decision mining"}
+#| label: fig-hist_jaccard
+
+include_graphics('../../outputs/histogram_jaccard_similarity.png')
+```
+
+
 
 #### Decision mining
 
 First we created a petri net with the inductive algorithm that will allow us to know the different decision points, we can see that the two images below are the same petri net, showing in the first one the decision points and in the second one the activities (transitions). In this section, in order to create a petri net with decision points, it was necessary to delete records from the event log.
-
-```{python, echo = FALSE, warning = FALSE, output = FALSE}
-#| label: decision mining results
-
-event_carac, point_decision = get_decision_mining(df,event_log)
-
-```
 
 
 ```{r, echo = FALSE, warning = FALSE, out.width = "2920px",  out.height = "680px", fig.cap="Petri net wiht points for decision mining"}
@@ -752,7 +462,7 @@ print('The decision point for thrombectomy in hospital is: '+ point_decision[1])
 print('The decision point for thrombolysis in emergency is: '+ point_decision[2])
 ```
 
-
+If the calculation of the importance of the variables in the decision does not appear for any point, it is because the complete decision mining process has not been carried out for that point due to lack of information complexity of the petri net.
 
 
 ```{r, echo = FALSE, results='asis',warning = FALSE}
@@ -773,149 +483,429 @@ cat(":::")
 
 
 
-
 #### Prediction
 
 The used method to make predictions is based on predicting the following activity, using the bupaR tool that makes use of a transformer model. 
-Starting with predicting the next activity, the shape of the dataframe resulting from the predictions and an evaluation of the model are shown, as well as a confusion matrix that allows a clear view of the accuracy of the model.
-
-```{r, warning = FALSE, output = FALSE}
-  df <- read.csv('../../outputs/event_log.csv', sep = '|') %>% rename(activity = concept.name, timestamp = time.timestamp) %>% 
-    select(!ends_with("_dt"))
-file.remove('../../outputs/event_log.csv')
-```
-
-
-```{r, warning = FALSE, echo = FALSE, output = FALSE}
-#| label: prediction next activity
-
-# 
-# library(keras)
-# use_condaenv("tf")
-# library(reticulate)
-# install_keras(method = c("conda"), conda = "auto", version = "default", tensorflow = "gpu")
-# 
-
-
-
-#### bupar
-
-  df$timestamp <- ymd_hms(df$timestamp)
-  df$registration_type <- 'completed'
-  df$resource_id <- 'employee'
-  df$activity_instance <- 1:nrow(df)
-  
-  # Para quitar 1000 filas aleatorias y disminuir el tamaño de las trayectorias
-  # df <- df[-sample(nrow(df),1000),]
-  
-  p <- eventlog(df, case_id='patient_id',
-                activity_id = 'activity',
-                activity_instance_id = 'activity_instance',
-                timestamp = 'timestamp',
-                lifecycle_id = 'registration_type',
-                resource_id = 'resource_id')
-  df <- prepare_examples(p, task = "next_activity",
-                         features = c('hospital_cd','ccaa_cd', 'healthcare_area_cd', 
-                                      'age_nm', 'sex_cd', 'socioeconomic_level_cd', 'atc_code_anticoagulants_cd'))
-  
-  
-  #### MODEL ####
-  set.seed(1234)
-  split <- df %>% split_train_test(split = 0.8)
-  
-              
-  model <- split$train_df %>% create_model(name = "my_model") 
-  model %>% compile()
-  # default loss function: log-cosh or the categorical cross entropy, for regression tasks 
-  #(next time and remaining time) and classification tasks, respectively.
-  
-  hist <- fit(object = model, train_data = split$train_df, epochs = 5)
-  
-  eval <- model %>% evaluate(split$test_df)
-  
-  predictions <- model %>% predict(test_data = split$test_df, 
-                                   output = "append") # default
-  
-  ###### Custom model
-  # custom_model <- split$train_df %>% create_model(custom = TRUE, name = "my_model")
-  # custom_model <- custom_model %>%
-  #   stack_layers(layer_dropout(rate = 0.1)) %>%
-  #   stack_layers(layer_dense(units = 64, activation = 'relu'))
-  # custom_model
-  # custom_model %>% compile()
-  # hist <- fit(object = custom_model, train_data = split$train_df, epochs = 5)
-  # custom_model %>% evaluate(split$test_df)
-  # 
-  # predictions <- custom_model %>% predict(test_data = split$test_df,
-  #                                         output = "append") # default
-  
-  
-  # confusion_matrix(predictions)
-  
-  plot_confusion_matrix <- plot(predictions) +
-    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90))
-  
-  png('../../outputs/confusion_matrix_predictions_bupar.png', width= 1280, height = 720)
-  plot(plot_confusion_matrix)
-  dev.off()
-
-
-
-```
-
-
-```{r, echo = FALSE, warning = FALSE, out.width = "1420px",out.height='720px', fig.cap="Confusion matrix for predictions"}
-#| label: fig-confusion_matrix
-
-include_graphics('../../outputs/confusion_matrix_predictions_bupar.png')
-```
-
-
-
-<!-- For the second option, which of the most frequent traces (k=10) is the most likely to be followed by the patient and the model's accuracy mean: -->
-
-<!-- ```{python, echo = FALSE, warning = FALSE, output=FALSE} -->
-<!-- #| label: prediction python results -->
-
-<!-- df_traces_pred, y_pred, model = pred_trayec_completas(traces, freq_traces, df) -->
-
-<!-- ``` -->
-
-### B- Survival analysis
-
-The kaplan-meier curves for the 10 most common pathways and the cox model summary are shown.
-
-```{python, echo = FALSE, warning = FALSE, fig.cap="Survival analysis"}
-#| label: survival analysis results
-
-df_surv = survival_analysis(df_filtered)
-```
-
-
-### C- GAMM model
-
-```{python, echo = FALSE}
-#| label: df gamm model results
-
-df_gam = df_modelo_gam(df_filtered, filtered_event_log)
-
-```
-
-The summary and plots for the gamm model are:
+Starting with predicting the next activity, the model's evaluation is: 
 
 ```{r, echo = FALSE, warning = FALSE, output = FALSE}
-#| label: gamm model call function
-model <- model_gam('../../outputs/df_gam.csv')
-file.remove('../../outputs/df_gam.csv')
+#| label: call predict_next_activity_function
+
+source('aux_scripts/prediction_next_activity.R')
+
+eval_compare_prediction <- predict_next_activity_function(params$data_path,n_epochs_fit=5)
+
+
 
 ```
-
 
 ```{r, echo = FALSE, warning = FALSE}
-#| label: gamm model results
-summary(model)
+#| label: print eval model
 
-par(mfrow = c(2, 2))
-gam.check(model)
+
+
+round(eval_compare_prediction$eval,2)
+
+
 ```
+
+
+
+A plot is also shown that allows a clear view of the accuracy of the model:
+```{r, echo = FALSE, warning = FALSE, fig.cap="Confusion matrix for predictions"}
+#| label: fig-roc_curve
+
+y_df <- data.frame(y_train = eval_compare_prediction$hist_fit$metrics$sparse_categorical_accuracy,
+                   y_val = eval_compare_prediction$hist_fit$metrics$val_sparse_categorical_accuracy)
+y_df$epochs <- 1:nrow(y_df)
+
+    
+plot <- ggplot(data = y_df) + 
+  geom_point(aes(x=epochs, y = y_train,text = paste("Epoch:", epochs, "\n Value: ",round(y_train,3))),color = "#377CE0" ,size=0.5) +
+  geom_line(aes(x=epochs, y = y_train,color = 'Train')) +
+  geom_point(aes(x=epochs, y = y_val,text = paste("Epoch:", epochs, "\n Value: ",round(y_val,3))), color = "#6C9E02" ,size=0.5) +
+  geom_line(aes(x=epochs, y = y_val, color = 'Validation')) +
+  labs(title = 'Performance model',
+     y = 'Sparce categorical accuracy',
+     x = 'Epoch') + scale_color_manual(name = "", values = c("Train" = "#377CE0", "Validation" = "#6C9E02")) + 
+  theme(panel.background = element_blank(),legend.position = 'bottom', legend.text = element_text(size=10),
+        axis.line = element_line(), legend.key=element_rect(fill="white"))
+plot <- ggplotly(plot, tooltip = 'text') %>%
+  layout(title = list(text = paste0('Performance model',
+                                    '<br>',
+                                    '<sup>')), legend = list(orientation = "h"))
+plot
+```
+
+
+### B- Estimation of outcomes within a path
+
+#### B.1 Kaplan-Meier survival plot
+The kaplan-meier survival plot for the 4 intervention possibilities is shown below:
+
+
+```{r, echo = FALSE, warning=FALSE}
+#| label: prediction outcomes
+
+con = dbConnect(duckdb::duckdb(), dbdir=params$data_path, read_only=FALSE)
+  
+df <- dbGetQuery(conn = con, "SELECT a.*,b.rank_trace,b.jaccard_similarity,b.dur_trace,b.perc FROM main.patient_view a LEFT JOIN main.prediction_outcomes_db b ON a.patient_id=b.patient_id")
+
+dbDisconnect(con, shutdown=TRUE)
+
+#df <- read.csv(file = '../../outputs/df_gam.csv', sep = '|')
+df <- df %>% mutate_if(is.logical, as.numeric)
+
+df1 <- df %>% mutate(
+  intervention = case_when(
+    inhospital_thrombectomy_bl == 0 & inhospital_fibrinolysis_bl == 0 & thrombolysis_emergency_bl == 0 ~ 'none',
+    inhospital_thrombectomy_bl == 0 & (inhospital_fibrinolysis_bl == 1 | thrombolysis_emergency_bl == 1) ~ 'fibrinolysis',
+    inhospital_thrombectomy_bl == 1 & (inhospital_fibrinolysis_bl == 1 | thrombolysis_emergency_bl == 1) ~ 'combined',
+    inhospital_thrombectomy_bl == 1 & inhospital_fibrinolysis_bl == 0 & thrombolysis_emergency_bl == 0 ~ 'thrombectomy_mec',
+  )
+)
+
+
+start_study <- as.Date('2010-01-01')
+end_study <-  as.Date('2022-12-31')
+
+list_fest_spain <- as.Date(c('2010-01-01','2010-01-06','2010-04-02','2010-05-01','2010-10-12','2010-11-01','2010-12-06','2010-12-08','2010-12-25',
+                             '2011-01-01','2011-01-06','2011-04-22','2011-08-15','2011-10-12','2011-11-01','2011-12-06','2011-12-08',
+                             '2012-01-06','2012-04-06','2012-05-01','2012-08-15','2012-10-12','2012-11-01','2012-12-06','2012-12-08','2012-12-25',
+                             '2013-01-01','2013-03-29','2013-05-01','2013-08-15','2013-10-12','2013-11-01','2013-12-06','2013-12-25',
+                             '2014-01-01','2014-01-06','2014-04-17','2014-04-18','2014-05-01','2014-06-19','2014-08-15','2014-11-01','2014-12-06','2014-12-08','2014-12-25',
+                             '2015-01-01','2015-01-06','2015-04-03','2015-05-01','2015-08-15','2015-10-12','2015-12-08','2015-12-25',
+                             '2016-01-01','2016-01-06','2016-03-25','2016-08-15','2016-10-12','2016-12-06','2016-12-08',
+                             '2017-01-06','2017-04-14','2017-05-01','2017-08-15','2017-10-12','2017-11-01','2017-12-06','2017-12-08','2017-12-25',
+                             '2018-01-01','2018-03-30','2018-05-01','2018-08-15','2018-10-12','2018-11-01','2018-12-06','2018-12-08','2018-12-25',
+                             '2019-01-01','2019-04-19','2019-05-01','2019-08-15','2019-10-12','2019-11-01','2019-12-06','2019-12-25',
+                             '2020-01-01','2020-01-06','2020-04-10','2020-05-01','2020-08-15','2020-10-12','2020-12-08','2020-12-25',
+                             '2021-01-01','2021-04-02','2021-05-01','2021-10-12','2021-11-01','2021-12-06','2021-12-08','2021-12-25',
+                             '2022-01-01','2022-01-06','2022-04-15','2022-08-15','2022-10-12','2022-11-01','2022-12-06','2022-12-08',
+                             '2023-04-07','2023-05-01','2023-08-15','2023-10-12','2023-11-01','2023-12-06','2023-12-08','2023-12-25'))
+
+df1 <- df1 %>% rowwise() %>% mutate(
+  start_futime_dt = as.Date(min(admission_emergency_care_dt, hospital_admission_date_dt, na.rm=TRUE)),
+  period = (12*(year(start_futime_dt)-year(start_study)) + month(start_futime_dt)),
+  weekday = weekdays(as.POSIXlt(start_futime_dt),abbreviate = FALSE),
+  weekend_bl = as.numeric(isHoliday(timeDate(start_futime_dt), holiday='ESP'))
+)
+df1$holiday_bl<-0
+df1$holiday_bl[df1$start_futime_dt %in% list_fest_spain] <- 1
+#### survival 12 months
+
+df1 <- df1 %>% mutate(
+  futime = case_when(
+    !is.na(exitus_dt) ~ as.numeric((as.Date(exitus_dt)-start_futime_dt)),
+    is.na(exitus_dt) ~ as.numeric(end_study - start_futime_dt)
+  )
+)
+
+df1$futime[df1$futime > 365] <- 365
+
+df1$intervention_bl[df1$intervention %in% 'none'] <- 0
+df1$intervention_bl[df1$intervention %in% 'fibrinolysis'] <- 1
+df1$intervention_bl[df1$intervention %in% 'thrombectomy_mec'] <- 1
+df1$intervention_bl[df1$intervention %in% 'combined'] <- 1
+
+df_model <- df1 %>% dplyr::select(patient_id,intervention,intervention_bl,hospital_cd , healthcare_area_cd , age_nm , sex_cd , municipality_code_cd , zip_code_cd , type_admission_cd , hospital_type_discharge_cd , ct_inhospital_bl , mri_inhospital_bl , n_admission_prior_emergency_nm , n_admission_prior_inhospital_nm , n_readmissions_30days_all_cause_bl , antiarrhythmics_prescription_bl , antihypertensive_prescription_bl , antiaggregants_prescription_bl , fibrinolitics_prescriptions_bl ,  modified_rankin_scale_cd , barthel_index_nm , healthcare_area_cd , heart_failure_bl , hypertension_bl , diabetes_bl , atrial_fibrillation_bl , valvular_disease_bl , rank_trace , jaccard_similarity , dur_trace , period,exitus_bl,weekday, weekend_bl, holiday_bl,futime)
+
+
+surv_obj <- Surv(time=df_model$futime,event=df_model$exitus_bl)
+
+df_model$intervention <- factor(df_model$intervention, levels = c("none","fibrinolysis","thrombectomy_mec","combined"))
+
+df_model$intervention = relevel(df_model$intervention, ref = "none")
+
+
+surv_fit <- survfit(surv_obj ~ intervention, data = df_model)
+
+
+ggsurvplot(surv_fit, data = df_model, xlab="Days of follow-up",
+           ylab="Survival probability",
+           xlim=c(0,365),
+           ylim=c(0.6,1),
+           break.x.by=50,
+           conf.int = FALSE,
+           main="Product-Limit Survival Estimates", risk.table = FALSE,
+           title = "Survival analysis by intervention",
+           legend.labs=c("None" ,"Fibrinolysis", "Thrombectomy", "Combined"))
+
+```
+
+#### B.2 General COX model
+
+A summary (table with all variables and a ggforest with only variables that are statistically significant, *pvalue* < 0.05 (if it is possible)) of the constructed COX model is shown below:
+
+```{r, echo = FALSE, warning=FALSE, fig.height=10, fig.width=10}
+#| label: prediction outcomes cox model
+
+df_model$sex_cd <- as.character(df_model$sex_cd)
+#df_model$zip_code_cd <- as.character(df_model$zip_code_cd)
+df_model$hospital_type_discharge_cd <- as.character(df_model$hospital_type_discharge_cd)
+
+model_surv <- coxph(surv_obj ~ intervention + hospital_cd + age_nm + sex_cd + zip_code_cd + hospital_type_discharge_cd + ct_inhospital_bl + mri_inhospital_bl + n_admission_prior_emergency_nm + n_admission_prior_inhospital_nm +  antiarrhythmics_prescription_bl + antihypertensive_prescription_bl + antiaggregants_prescription_bl + fibrinolitics_prescriptions_bl +  modified_rankin_scale_cd +  heart_failure_bl + hypertension_bl + diabetes_bl + atrial_fibrillation_bl + valvular_disease_bl + rank_trace + jaccard_similarity + dur_trace + period + holiday_bl + weekend_bl + weekday, data = df_model)
+
+#survminer::ggforest(model_surv,data=as.data.frame(df_model))
+
+df_model_ <- df_model %>% dplyr::select(intervention_bl, exitus_bl, hospital_cd , age_nm , sex_cd , zip_code_cd , hospital_type_discharge_cd , ct_inhospital_bl , mri_inhospital_bl , n_admission_prior_emergency_nm , n_admission_prior_inhospital_nm ,  antiarrhythmics_prescription_bl , antihypertensive_prescription_bl , antiaggregants_prescription_bl , fibrinolitics_prescriptions_bl ,  modified_rankin_scale_cd ,  heart_failure_bl , hypertension_bl , diabetes_bl , atrial_fibrillation_bl , valvular_disease_bl , rank_trace , jaccard_similarity , dur_trace , period , holiday_bl , weekend_bl , weekday )
+sum_model_surv <- summary(model_surv)
+p <- as.data.frame(sum_model_surv$coefficients)
+p1 <- p %>% filter(`Pr(>|z|)` <= 0.05)
+
+aux1 <- data.frame(variables_df = colnames(df_model_))
+aux2 <- data.frame(variables_model = rownames(p1))
+aux3 <- data.frame(var=str_extract(aux2$variables_model,str_c(aux1$variables_df,collapse = '|')))
+aux3 <- aux3 %>% filter(!is.na(var))
+aux3 <- unique(aux3$var)
+
+
+tab_model(model_surv)
+tryCatch(
+  {
+forest_model(model_surv, covariates = aux3)
+    
+  },
+  error=function(cond) {
+    message(paste0("error building forest plot: there are too many significant categorical variables to construct the plot."))
+    print(paste0("error building forest plot: there are too many significant categorical variables to construct the plot."))
+  }
+) 
+
+
+
+```
+
+
+A test to see if proportional hazard assumption is satisfied, can be seen from the overall summary, *pvalue* < 0.05 indicates that proportional hazard assumption is not satisfied. If the test calculation is not possible, this could occur when there are collinear variables in the COX model, or when there are too few events.
+
+
+
+```{r, echo = FALSE, warning=FALSE}
+#| label: prediction outcomes cox model test
+tryCatch(
+  {
+cox.zph(model_surv)
+    
+  },
+  error=function(cond) {
+    message(paste0("error calculating test."))
+    print(paste0("error calculating test."))
+  }
+) 
+
+
+
+#percent_cases <- 100*(1/exp(model_surv$coefficients)-1) # percent more
+
+formula_model <- paste0(aux3,collapse = '+')
+rm(aux1,aux2,aux3,p,p1)
+#### Propension to intervention model
+
+
+df_model_$intervention_fibrinolysis_bl <- if_else(df_model$intervention == 'fibrinolysis',1,0)
+df_model_$intervention_thrombectomy_mec_bl <- if_else(df_model$intervention == 'thrombectomy_mec',1,0)
+df_model_$intervention_combined_bl <- if_else(df_model$intervention == 'combined',1,0)
+
+df_model_ <- df_model_ %>% rename(`fibrinolysis intervention bl` = intervention_fibrinolysis_bl, `thrombectomy mechanic intervention bl` = intervention_thrombectomy_mec_bl, `combined intervention bl` = intervention_combined_bl, `exitus bl` = exitus_bl)
+```
+
+
+#### B.3 Propension to intervention model
+
+
+
+```{r, echo = FALSE, warning=FALSE}
+#| label: prediction outcomes propensity_global
+
+### porpensity_global 
+tryCatch(
+  {
+    formula_propensity_model_global <- as.formula(paste0('intervention_bl ~ ',formula_model))
+    
+    propensity_model_global <- glm(formula_propensity_model_global, data = df_model_, family = binomial)
+    df_model_$probabilities_global <- propensity_model_global %>% predict(df_model_, type = "response")
+    
+    df_model_ <- df_model_ %>% mutate(ps_global = 1/(1-probabilities_global))
+    
+    
+  },
+  error=function(cond) {
+    message(paste0("error building model: propension to intervention (global)"))
+    print(paste0("error building model: propension to intervention (global)"))
+  }
+) 
+```
+
+
+The summary is displayed propensity to fibrinolysis intervention model:
+
+```{r, echo = FALSE, warning=FALSE}
+#| label: prediction outcomes propensity_fibrinolisys
+### propensity_fibrinolisys
+
+
+tryCatch(
+  {
+    formula_propensity_model_fibri <- as.formula(paste0('`fibrinolysis intervention bl` ~ ',formula_model))
+    
+    propensity_model_fibri <- glm(formula_propensity_model_fibri, data = df_model_, family = binomial)
+    df_model_$probabilities_fibrinolysis <- propensity_model_fibri %>% predict(df_model_, type = "response")
+    df_model_ <- df_model_ %>% mutate(ps_fibrinolysis = 1/(1-probabilities_fibrinolysis))
+    tab_model(propensity_model_fibri)
+
+    
+  },
+  error=function(cond) {
+    message(paste0("error building model: propension to fibrinolisys intervention"))
+    print(paste0("error building model: propension to fibrinolisys intervention"))
+  }
+)
+
+```
+
+The summary is displayed propensity to thrombectomy mechanic intervention model:
+
+
+```{r, echo = FALSE, warning=FALSE}
+#| label: prediction outcomes propensity_thrombectomy_mec
+### propensity_thrombectomy_mec
+
+
+tryCatch(
+  {
+    formula_propensity_thrombectomy_mec <- as.formula(paste0('`thrombectomy mechanic intervention bl` ~ ',formula_model))
+    
+    propensity_model_throm_mec <- glm(formula_propensity_thrombectomy_mec, data = df_model_, family = binomial)
+    df_model_$probabilities_thrombectomy_mec <- propensity_model_throm_mec %>% predict(df_model_, type = "response")
+    df_model_ <- df_model_ %>% mutate(ps_thrombectomy_mec = 1/(1-probabilities_thrombectomy_mec))
+    tab_model(propensity_model_throm_mec)
+
+    
+  },
+  error=function(cond) {
+    message(paste0("error building model: propension to thrombectomy mechanic intervention"))
+    print(paste0("error building model: propension to thrombectomy mechanic intervention"))
+  }
+)
+
+```
+
+The summary is shown propensity to combined intervention model:
+
+
+```{r, echo = FALSE, warning=FALSE}
+#| label: prediction outcomes propensity_combined
+### propensity_combined
+
+tryCatch(
+  {
+    formula_propensity_combined <- as.formula(paste0('`combined intervention bl` ~ ',formula_model))
+    
+    propensity_model_combined <- glm(formula_propensity_combined, data = df_model_, family = binomial)
+    df_model_$probabilities_combined <- propensity_model_combined %>% predict(df_model_, type = "response")
+    df_model_ <- df_model_ %>% mutate(ps_combined = 1/(1-probabilities_combined))
+    tab_model(propensity_model_combined)
+
+    
+  },
+  error=function(cond) {
+    message(paste0("error building model: propension to combined intervention"))
+    print(paste0("error building model: propension to combined intervention"))
+  }
+)
+
+```
+
+#### B.4 Model to predict exitus with PS as covariable
+
+
+
+```{r, echo = FALSE, warning=FALSE}
+#| label: prediction outcomes ps_fibri model
+
+
+
+tryCatch(
+  {
+    model_fibrinolysis <- glm(`exitus bl` ~ ps_fibrinolysis, data=df_model_, family = binomial)
+    tab_model(model_fibrinolysis)
+    
+  },
+  error=function(cond) {
+    message(paste0("error building model: propensity score fibrinolysis as covariable"))
+    print((paste0("error building model: propensity score fibrinolysis as covariable")))
+  }
+)
+
+```
+
+
+
+```{r, echo = FALSE, warning=FALSE}
+#| label: prediction outcomes ps_throm model
+
+
+
+tryCatch(
+  {
+    model_combined <- glm(`exitus bl` ~ ps_combined, data=df_model_, family = binomial)
+    tab_model(model_combined)
+    
+  },
+  error=function(cond) {
+    message(paste0("error building model: propensity score combined as covariable"))
+    print(paste0("error building model: propensity score combined as covariable"))
+  }
+)
+
+```
+
+
+
+```{r, echo = FALSE, warning=FALSE}
+#| label: prediction outcomes ps_comb model
+
+
+
+tryCatch(
+  {
+    model_thrombectomy_mec <- glm(`exitus bl` ~ ps_thrombectomy_mec, data=df_model_, family = binomial)
+    tab_model(model_thrombectomy_mec)
+    
+  },
+  error=function(cond) {
+    message(paste0("error building model: propensity score thrombectomy mechanic as covariable"))
+    print(paste0("error building model: propensity score thrombectomy mechanic as covariable"))
+  }
+)
+
+```
+
+
+
+Finally, a model is built to predict exitus with PS calculated in each of the previous models as covariable and PS any interaction as offset:
+
+
+```{r, echo = FALSE, warning=FALSE}
+#| label: prediction outcomes full model
+### full model
+
+
+tryCatch(
+  {
+    model_full <- glm(`exitus bl` ~ ps_fibrinolysis + ps_thrombectomy_mec + ps_combined, data = df_model_, family = binomial, offset = ps_global)
+    
+    tab_model(model_full)
+    
+  },
+  error=function(cond) {
+    message(paste0("error building model: final model (propensity score as covariable)"))
+    print(paste0("error building model: final model (propensity score as covariable)"))
+  }
+)
+
+```
+
+
 

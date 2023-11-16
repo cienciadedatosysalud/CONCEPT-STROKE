@@ -1,1 +1,1 @@
-(Default directory of all the inputs used in the project execution)
+(Default directory of all inputs used during project execution)
