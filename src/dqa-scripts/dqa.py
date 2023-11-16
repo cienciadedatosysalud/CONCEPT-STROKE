@@ -49,8 +49,10 @@ if __name__ == '__main__':
             exit(1)
         entity_name = entity['name']
         title = configuration_file['metadata']['use_case'] + ' - ' + entity_name + ' | Profiling Report'
+        categorical_variables = [variable["label"] for variable in entity['variables'] if variable['type'] == "Categorical"]
         query = "Select * from {entity}".format(entity=entity_name)
         df_entity = con.query(query).to_df()
+        df_entity[categorical_variables] = df_entity[categorical_variables].astype('category')
         logging.info(f"\"{entity_name}\" entity contains {len(df_entity)} records")
         if len(df_entity) > 0:
             profile = ProfileReport(df_entity, title=title, minimal=True)

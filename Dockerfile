@@ -16,28 +16,29 @@ RUN micromamba run -n aspire date
 
 USER $MAMBA_USER
 
-
 COPY --chown=$MAMBA_USER:$MAMBA_USER env_project.yaml /tmp/env_project.yaml
 
 # Installing dependencies
 RUN micromamba install -y -n aspire -f /tmp/env_project.yaml \
+    && micromamba run -n aspire Rscript -e 'remotes::install_github("rstudio/tensorflow")' \
+    && micromamba run -n aspire Rscript -e 'remotes::install_github("bupaverse/processpredictR")' \
+    && micromamba run -n aspire Rscript -e 'remotes::install_github("bupaverse/bupaverse")' \
+    #&& micromamba run -n aspire pip install pm4py \
+    && micromamba run -n aspire pip cache purge \
     && micromamba clean --all --yes \
     && rm -rf /opt/conda/conda-meta /tmp/env_project.yaml
 
 # Installing R packages not found in conda-forge
-RUN micromamba run -n aspire Rscript -e 'remotes::install_github("rstudio/tensorflow")'
-RUN micromamba run -n aspire Rscript -e 'remotes::install_github("bupaverse/processpredictR")'
-RUN micromamba run -n aspire Rscript -e 'remotes::install_github("bupaverse/bupaverse")'
+
+#RUN micromamba run -n aspire Rscript -e 'remotes::install_github("rstudio/tensorflow")'
+#RUN micromamba run -n aspire Rscript -e 'remotes::install_github("bupaverse/processpredictR")'
+#RUN micromamba run -n aspire Rscript -e 'remotes::install_github("bupaverse/bupaverse")'
 
 ENV RETICULATE_PYTHON=/opt/conda/envs/aspire/bin/python
 
-# Installing R packages not found in conda-forge
-RUN micromamba run -n aspire pip install pm4py
+#RUN micromamba run -n aspire pip install pm4py
 
 COPY --chown=$MAMBA_USER:$MAMBA_USER . /home/$MAMBA_USER/projects/concept-stroke
-COPY --chown=$MAMBA_USER:$MAMBA_USER main_logo.png /temp/main_logo.png
-
-RUN cp /temp/main_logo.png $(find front -name main_logo**)
 
 ENV APP_PORT=3000
 ENV APP_HOST=0.0.0.0
