@@ -28,8 +28,8 @@ docker pull ghcr.io/cienciadedatosysalud/concept-stroke:latest
 
 docker run -d -p 127.0.0.1:3000:3000 --name concept-stroke-aspire ghcr.io/cienciadedatosysalud/concept-stroke:latest
 
-# Open your web browser at http://localhost:3000.
 ```
+Open your web browser at http://localhost:3000
 
 ## Analytical pipeline
 ## Outputs
