@@ -1,0 +1,112 @@
+encoding,code,clean_code,description,type,subtype
+icd-9-mc,433.01,43301,Occlusion and stenosis of basilar artery with cerebral infarction,ischaemic,arterial stenosis or occlusion
+icd-9-mc,433.11,43311,Occlusion and stenosis of carotid artery with cerebral infarction,ischaemic,arterial stenosis or occlusion
+icd-9-mc,433.21,43321,Occlusion and stenosis of vertebral artery with cerebral infarction,ischaemic,arterial stenosis or occlusion
+icd-9-mc,433.31,43331,Occlusion and stenosis of multiple and bilateral precerebral arteries with cerebral infarction,ischaemic,arterial stenosis or occlusion
+icd-9-mc,433.81,43381,Occlusion and stenosis of other specified precerebral artery with cerebral infarction,ischaemic,arterial stenosis or occlusion
+icd-9-mc,433.91,43391,Occlusion and stenosis of unspecified precerebral artery with cerebral infarction,ischaemic,arterial stenosis or occlusion
+icd-9-mc,434.01,43401,Cerebral thrombosis with cerebral infarction,ischaemic,thrombus/embolism
+icd-9-mc,434.11,43411,Cerebral embolism with cerebral infarction,ischaemic,thrombus/embolism
+icd-9-mc,434.91,43491,"Cerebral artery occlusion, unspecified with cerebral infarction",ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63,I63,Cerebral infarction,ischaemic,thrombus/embolism
+icd-10-mc,I63.0,I630,Cerebral infarction due to thrombosis of precerebral arteries,ischaemic,thrombus/embolism
+icd-10-mc,I63.00,I6300,Cerebral infarction due to thrombosis of unspecified precerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.011,I63011,Cerebral infarction due to thrombosis of right vertebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.012,I63012,Cerebral infarction due to thrombosis of left vertebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.013,I63013,Cerebral infarction due to thrombosis of bilateral vertebral arteries,ischaemic,thrombus/embolism
+icd-10-mc,I63.019,I63019,Cerebral infarction due to thrombosis of unspecified vertebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.02,I6302,Cerebral infarction due to thrombosis of basilar artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.031,I63031,Cerebral infarction due to thrombosis of right carotid artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.032,I63032,Cerebral infarction due to thrombosis of left carotid artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.033,I63033,Cerebral infarction due to thrombosis of bilateral carotid arteries,ischaemic,thrombus/embolism
+icd-10-mc,I63.039,I63039,Cerebral infarction due to thrombosis of unspecified carotid artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.09,I6309,Cerebral infarction due to thrombosis of other precerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.1,I631,Cerebral infarction due to embolism of basilar artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.10,I6310,Cerebral infarction due to embolism of unspecified precerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.111,I63111,Cerebral infarction due to embolism of right vertebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.112,I63112,Cerebral infarction due to embolism of left vertebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.113,I63113,Cerebral infarction due to embolism of bilateral vertebral arteries,ischaemic,thrombus/embolism
+icd-10-mc,I63.119,I63119,Cerebral infarction due to embolism of unspecified vertebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.12,I6312,Cerebral infarction due to embolism of basilar artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.131,I63131,Cerebral infarction due to embolism of right carotid artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.132,I63132,Cerebral infarction due to embolism of left carotid artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.133,I63133,Cerebral infarction due to embolism of bilateral carotid arteries,ischaemic,thrombus/embolism
+icd-10-mc,I63.139,I63139,Cerebral infarction due to embolism of unspecified carotid artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.19,I6319,Cerebral infarction due to embolism of other precerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.2,I63.2,Cerebral infarction due to unspecified arterial stenosis or occlusion of precerebral arteries,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.20,I6320,Cerebral infarction due to unspecified arterial stenosis or occlusion of unspecified precerebral arteries,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.211,I63211,Cerebral infarction due to unspecified arterial stenosis or occlusion of right vertebral artery,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.212,I63212,Cerebral infarction due to unspecified arterial stenosis or occlusion of left vertebral artery,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.213,I63213,Cerebral infarction due to unspecified arterial stenosis or occlusion of bilateral vertebral arteries,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.219,I63219,Cerebral infarction due to unspecified arterial stenosis or occlusion of unspecified vertebral artery,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.22,I6322,Cerebral infarction due to unspecified arterial stenosis or occlusion of basilar artery,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.231,I63231,Cerebral infarction due to unspecified arterial stenosis or occlusion of right carotid arteries,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.232,I63232,Cerebral infarction due to unspecified arterial stenosis or occlusion of left carotid arteries,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.233,I63233,Cerebral infarction due to unspecified arterial stenosis or occlusion of bilateral carotid arteries,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.239,I63239,Cerebral infarction due to unspecified arterial stenosis or occlusion of unspecified carotid artery,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.29,I6329,Cerebral infarction due to unspecified arterial stenosis or occlusion of other precerebral arteries,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.3,I633,Cerebral infarction due to thrombosis of right anterior cerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.30,I6330,Cerebral infarction due to thrombosis of unspecified cerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.311,I63311,Cerebral infarction due to thrombosis of right middle cerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.312,I63312,Cerebral infarction due to thrombosis of left middle cerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.313,I63313,Cerebral infarction due to thrombosis of bilateral middle cerebral arteries,ischaemic,thrombus/embolism
+icd-10-mc,I63.319,I63319,Cerebral infarction due to thrombosis of unspecified middle cerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.321,I63321,Cerebral infarction due to thrombosis of right anterior cerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.322,I63322,Cerebral infarction due to thrombosis of left anterior cerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.323,I63323,Cerebral infarction due to thrombosis of bilateral anterior cerebral arteries,ischaemic,thrombus/embolism
+icd-10-mc,I63.329,I63329,Cerebral infarction due to thrombosis of unspecified anterior cerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.331,I63331,Cerebral infarction due to thrombosis of right posterior cerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.332,I63332,Cerebral infarction due to thrombosis of left posterior cerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.333,I63333,Cerebral infarction due to thrombosis of bilateral posterior cerebral arteries,ischaemic,thrombus/embolism
+icd-10-mc,I63.339,I63339,Cerebral infarction due to thrombosis of unspecified posterior cerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.341,I63341,Cerebral infarction due to thrombosis of right cerebellar artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.342,I63342,Cerebral infarction due to thrombosis of left cerebellar artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.343,I63343,Cerebral infarction due to thrombosis of bilateral cerebellar arteries,ischaemic,thrombus/embolism
+icd-10-mc,I63.349,I63349,Cerebral infarction due to thrombosis of unspecified cerebellar artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.39,I6339,Cerebral infarction due to thrombosis of other cerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.4,I634,Cerebral infarction due to embolism of right anterior cerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.40,I6340,Cerebral infarction due to embolism of unspecified cerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.411,I63411,Cerebral infarction due to embolism of right middle cerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.412,I63412,Cerebral infarction due to embolism of left middle cerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.413,I63413,Cerebral infarction due to embolism of bilateral middle cerebral arteries,ischaemic,thrombus/embolism
+icd-10-mc,I63.419,I63419,Cerebral infarction due to embolism of unspecified middle cerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.421,I63421,Cerebral infarction due to embolism of right anterior cerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.422,I63422,Cerebral infarction due to embolism of left anterior cerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.423,I63423,Cerebral infarction due to embolism of bilateral anterior cerebral arteries,ischaemic,thrombus/embolism
+icd-10-mc,I63.429,I63429,Cerebral infarction due to embolism of unspecified anterior cerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.431,I63431,Cerebral infarction due to embolism of right posterior cerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.432,I63432,Cerebral infarction due to embolism of left posterior cerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.433,I63433,Cerebral infarction due to embolism of bilateral posterior cerebral arteries,ischaemic,thrombus/embolism
+icd-10-mc,I63.439,I63439,Cerebral infarction due to embolism of unspecified posterior cerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.441,I63441,Cerebral infarction due to embolism of right cerebellar artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.442,I63442,Cerebral infarction due to embolism of left cerebellar artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.443,I63443,Cerebral infarction due to embolism of bilateral cerebellar arteries,ischaemic,thrombus/embolism
+icd-10-mc,I63.449,I63449,Cerebral infarction due to embolism of unspecified cerebellar artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.49,I6349,Cerebral infarction due to embolism of other cerebral artery,ischaemic,thrombus/embolism
+icd-10-mc,I63.5,I635,Cerebral infarction due to unspecified arterial stenosis or occlusion of cerebral arteries,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.50,I6350,Cerebral infarction due to unspecified arterial stenosis or occlusion of unspecified cerebral artery,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.511,I63511,Cerebral infarction due to unspecified arterial stenosis or occlusion of right middle cerebral artery,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.512,I63512,Cerebral infarction due to unspecified arterial stenosis or occlusion of left middle cerebral artery,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.513,I63513,Cerebral infarction due to unspecified arterial stenosis or occlusion of bilateral middle cerebral arteries,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.519,I63519,Cerebral infarction due to unspecified arterial stenosis or occlusion of unspecified middle cerebral artery,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.521,I63521,Cerebral infarction due to unspecified arterial stenosis or occlusion of right anterior cerebral artery,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.522,I63522,Cerebral infarction due to unspecified arterial stenosis or occlusion of left anterior cerebral artery,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.523,I63523,Cerebral infarction due to unspecified arterial stenosis or occlusion of bilateral anterior cerebral arteries,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.529,I63529,Cerebral infarction due to unspecified arterial stenosis or occlusion of unspecified anterior cerebral artery,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.531,I63531,Cerebral infarction due to unspecified arterial stenosis or occlusion of right posterior cerebral artery,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.532,I63532,Cerebral infarction due to unspecified arterial stenosis or occlusion of left posterior cerebral artery,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.533,I63533,Cerebral infarction due to unspecified arterial stenosis or occlusion of bilateral posterior cerebral arteries,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.539,I63539,Cerebral infarction due to unspecified arterial stenosis or occlusion of unspecified posterior cerebral artery,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.541,I63541,Cerebral infarction due to unspecified arterial stenosis or occlusion of right cerebellar artery,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.542,I63542,Cerebral infarction due to unspecified arterial stenosis or occlusion of left cerebellar artery,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.543,I63543,Cerebral infarction due to unspecified arterial stenosis or occlusion of bilateral cerebellar arteries,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.549,I63549,Cerebral infarction due to unspecified arterial stenosis or occlusion of unspecified cerebellar artery,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.59,I6359,Cerebral infarction due to unspecified arterial stenosis or occlusion of other cerebral artery,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.6,I636,"Cerebral infarction due to cerebral venous thrombosis, nonpyogenic",ischaemic,thrombus/embolism
+icd-10-mc,I63.8,I638,Other cerebral infarction,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.81,I6381,Other cerebral infarction due to small artery arterial stenosis or occlusion,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.89,I6382,Other cerebral infarction,ischaemic,arterial stenosis or occlusion
+icd-10-mc,I63.9,I639,"Cerebral infarction, unspecified",ischaemic,arterial stenosis or occlusion
+icd-10-mc,G46,G46,Vascular syndromes of brain in cerebrovascular diseases,ischaemic,arterial stenosis or occlusion
+icd-10-mc,G46.0,G460,Middle cerebral artery syndrome,ischaemic,arterial stenosis or occlusion
+icd-10-mc,G46.1,G461,Anterior cerebral artery syndrome,ischaemic,arterial stenosis or occlusion

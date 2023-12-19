@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import duckdb
 from pm4py.objects.conversion.log import converter as log_converter
+
 def import_data_and_convert_to_event_log(data_path):
     con = duckdb.connect(data_path)
     con.sql('''CREATE OR REPLACE VIEW patient_view AS 

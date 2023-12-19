@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import random
 from pm4py.algo.decision_mining import algorithm as decision_mining
+import logging
 
 def inductive_miner_algorithm(event_carac):
     tree = inductive_miner.apply(event_carac)
@@ -51,11 +52,11 @@ def get_decision_mining(df, event_log):
     event_carac['org:resource'] = ''
     
     # only for synthetic data
-    np.random.seed(1234)
-    remove_n = 3000
-    drop_indices = np.random.choice(event_carac.index, remove_n, replace=False)
-    event_carac = event_carac.drop(drop_indices)
-    ####
+    # np.random.seed(1234)
+    # remove_n = 3000
+    # drop_indices = np.random.choice(event_carac.index, remove_n, replace=False)
+    # event_carac = event_carac.drop(drop_indices)
+
     inductive_miner_algorithm(event_carac)
     net, im, fm = discover_petri_net_inductive(event_carac)
     gviz = pn_visualizer.apply(net, im, fm, parameters={pn_visualizer.Variants.WO_DECORATION.value.Parameters.DEBUG: True})
@@ -77,8 +78,9 @@ def get_decision_mining(df, event_log):
             fig.tight_layout()
             fig.savefig('../../outputs/barplot_features_importance_' + point + '.png')
             plt.close()
-        except ValueError:
-            print('It is not possible to carry out the decision mining process for the item: ' + point)
+        except:
+            logging.basicConfig(level=logging.INFO)
+            logging.info('It is not possible to carry out the decision mining process for the item: ' + point)
 
     return point_decision
 

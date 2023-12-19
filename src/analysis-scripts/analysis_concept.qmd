@@ -56,20 +56,10 @@ The cohort is defined as patients admitted to hospital due to acute ischaemic st
 
 -   Exclusion criteria: Patients aged 17 years or younger; Patients with a diagnosis of acute haemorrhagic stroke or with other non-specific stroke diagnoses.
 
--   Study period: 01-01-2010 to most recent data.
+-   Study period: 01-01-2010 to 31-12-2022.
 
-### Analysis plan
+## Analysis plan
 
-A- Process mining to discover and compare actual care pathways with the theoretical pathway and with those present in the participating regions.
-
-B- Survival analysis to provide prediction of health outcomes within each pathway.
-
-C- Hierarchical generalised additive hierarchical modelling to compare the effectiveness of interventions within pathways.
-
-D- Economic evaluation to measure economic impact and efficiency.
-
-
-## Running code
 
 ```{r}
 # Sys.setenv(RETICULATE_PYTHON = "/opt/conda/envs/aspire/bin/python")
@@ -141,13 +131,16 @@ library(timeDate)
 library(sjPlot)
 library(forestmodel)
 library(plotly)
+library(logger)
+library(gt)
+library(reshape2)
 ```
 
 
 
 ### Descriptive analysis
 
-To study the observed data, we performed a small exploratory analysis of the data. First, we must convert our DataFrame data to an Event Log object. However, one of the drawbacks we may have when creating our Event Log is the granularity of the dates, as hospital dates are usually accurate to the day while emergency dates are usually accurate to the second. Therefore, we need to generate a function to check that they are correct and see if any of them do not make medical sense. We may find errors such as, for example, having emergency and hospital dates on the same day and, as they have different granularity, automatically the hospital date is ordered first or, for example, emergency discharge date is prior to the admission date, among others.  
+To study the observed data, we performed a small exploratory analysis of the data. First, we built a descriptive table of the imported data that shows the main characteristics of the patients registered in the database. After, we must convert our DataFrame data to an Event Log object. However, one of the drawbacks we may have when creating our Event Log is the granularity of the dates, as hospital dates are usually accurate to the day while emergency dates are usually accurate to the second. Therefore, we need to generate a function to check that they are correct and see if any of them do not make medical sense. We may find errors such as, for example, having emergency and hospital dates on the same day and, as they have different granularity, automatically the hospital date is ordered first or, for example, emergency discharge date is prior to the admission date, among others.  
 
 As part of the exploratory analysis it is interesting to know how many different pathways appear and the frequency of each one. This allows us to know what percentage of the pathways are among the most frequent pathways and which pathways are isolated cases. 
 
@@ -155,7 +148,7 @@ As part of the exploratory analysis it is interesting to know how many different
 
 We carried out a survival analysis with the 10 most frequent traces, constructing a Kaplan-Meier curve for each of them for comparison. Subsequently, a COX model was performed to compare these pathways and observe the Hazard Ratio (HR) of each pathway compared to the rest.
 
-### A- Process Mining
+### Process Mining
 
 For process mining we created several functions depending on the part of the process mining study, which can be divided into: 
 
@@ -195,11 +188,12 @@ Decision mining allows us to know what are the main characteristics of patients 
 To predict which pathway a given patient should follow based on his or her characteristics, we have used the *bupaR* library, which makes use of a transformer model to predict the pathway as a sequence of activities. Thus, an Event log with features and a transformer model is used to predict the next activity.
 
 
-### B- Estimation of outcomes within a path
+### Estimation of outcomes within a path
 
 A proportional-hazard regression with the scores of propensity of specific paths being the main independent factor in the prediction of survival at 6 and 12 months after admission.
 
-#### B.1 Kaplan-Meier survival plot
+#### Kaplan-Meier survival plot
+
 The kaplan-meier survival plot for the 4 intervention possibilities is shown below:
 
 - None
@@ -211,7 +205,7 @@ The kaplan-meier survival plot for the 4 intervention possibilities is shown bel
 - Combined (fibrinolyisis + thrombectomy mechanic)
 
 
-#### B.2 General COX model
+#### General COX model
 
 A COX model is built with the survival object (time = survival time; case = exitus) as the dependent variable and the following variables as independent variables: 
 
@@ -219,7 +213,7 @@ A COX model is built with the survival object (time = survival time; case = exit
 
 - Numerical: age, jaccard similarity measure, duration trace, period, number of admission prior emergency, number of admission prior inhospital.
 
-#### B.3 Propension to intervention model
+#### Propension to intervention model
 
 In order to overcome the violation of proportional risk in COX model, 4 different propensity to intervention models are estimated, using as covariables those that have been found to be significant (*pvalue* < 0.05) in the general COX model constructed in the previous section.
 
@@ -236,7 +230,7 @@ After building the models, the propensity to intervention for each patient is pr
 where *p(y)* indicates the prediction for each patient *i*.
 
 
-#### B.4 Model to predict exitus with PS as covariable
+#### Model to predict exitus with PS as covariable
 
 After calculating the PS for each intervention, a model is constructed for each intervention to predict exitus with the PS of this corresponding intervention as a covariate and finally a general model with the PS of each intervention as covariates and the PS of any intervention as an offset.
 
@@ -246,21 +240,152 @@ These results have been carried out with synthetic data previously generated acc
 
 ### Descriptive analysis
 
-First, we imported and converted our DataFrame to an Event Log and check dates. 
+First, we built a descriptive table of the imported data that shows the main characteristics of the patients registered in the database.
+
+
+
+```{r, echo=FALSE,warning=FALSE, output = FALSE}
+#| label: query descriptive
+
+
+con = dbConnect(duckdb::duckdb(), dbdir=params$data_path, read_only=FALSE)
+
+descriptive_values <- dbGetQuery(conn = con, "
+SELECT median(age_nm) as median_age, 
+(QUANTILE_CONT(age_nm, 0.75)-QUANTILE_CONT(age_nm, 0.25)) as iqr_age,
+count(distinct patient_id) filter (where sex_cd = '1') as men,
+count(distinct patient_id) filter (where sex_cd = '2') as women,
+count(distinct patient_id) as n_patient_distinct,
+count(distinct patient_id) filter (where inhospital_fibrinolysis_bl = TRUE OR thrombolysis_emergency_dt is NOT NULL) as n_patient_with_fibrinolysis,
+count(distinct patient_id) filter (where inhospital_fibrinolysis_bl = TRUE) as n_patient_with_thrombectomy,
+count(distinct patient_id) filter (where exitus_dt is NOT NULL) as n_patient_exitus,
+FROM main.patient")
+
+descriptive_values <- descriptive_values %>% mutate(
+  perc_men = round((men/n_patient_distinct)*100,2),
+  united_men =paste0(men, ' (',perc_men,'%)' ),
+  perc_women = round((women/n_patient_distinct)*100,2),
+  united_women =paste0(women, ' (',perc_women,'%)' )
+)
+
+descriptive_values <- descriptive_values %>% select(!c(men,women,perc_men,perc_women))
+
+
+
+comorbidities <- dbGetQuery(conn=con,"
+with seleccion as (
+SELECT
+	patient_id ,
+	list_aggregate([heart_failure_bl::int,
+  hypertension_bl::int,
+	diabetes_bl::int,
+  atrial_fibrillation_bl::int,
+	valvular_disease_bl::int],
+	'sum') as sum_comorbidities
+from
+	main.patient)
+select
+	sum_comorbidities,
+	count(DISTINCT patient_id) as patient_distinct_n_comorbidities
+from
+	seleccion
+group by
+	sum_comorbidities")
+
+comorbidities_ <- data.frame(comor_0 = sum(filter(comorbidities, sum_comorbidities == 0)$patient_distinct_n_comorbidities),
+                             comor_1_2 = sum(filter(comorbidities, sum_comorbidities > 0 & sum_comorbidities <=2)$patient_distinct_n_comorbidities),
+                             comor_2mayor = sum(filter(comorbidities,sum_comorbidities >2)$patient_distinct_n_comorbidities))
+comorbidities_ <- melt(comorbidities_)
+comorbidities_ <- comorbidities_ %>% mutate(
+  perc_comorbidities = round((value/descriptive_values$n_patient_distinct)*100,2),
+  united_comorbidities=paste0(value, ' (',perc_comorbidities,'%)' )
+)
+rm(comorbidities)
+
+dbDisconnect(con, shutdown=TRUE)
+
+```
+
+
+```{r, echo=FALSE,warning=FALSE}
+#| label: descriptive tables inputs1
+
+descriptive_values_ <- melt(descriptive_values,id=NULL) 
+
+comorbidities_ <- comorbidities_ %>% arrange(variable) %>% dplyr::select(variable,united_comorbidities) %>% 
+  mutate(descrp = case_when(
+    variable %in% 'comor_0' ~ '0 N comorbidities',
+    variable %in% 'comor_1_2' ~ '1 <= N comorbidities <= 2',
+    variable %in% 'comor_2mayor' ~ '2 < N comorbidities',
+    TRUE ~ 'Unknown'))
+
+descriptive_values_$variable <- as.character(descriptive_values_$variable)
+
+
+descriptive_values_$variable[descriptive_values_$variable %in% 'median_age'] <- 'Median age'
+descriptive_values_$variable[descriptive_values_$variable %in% 'iqr_age'] <- 'IQR age'
+descriptive_values_$variable[descriptive_values_$variable %in% 'n_patient_distinct'] <- 'N patients (unique)'
+descriptive_values_$variable[descriptive_values_$variable %in% 'n_patient_with_fibrinolysis'] <- 'N patients (unique) with fibrinolysis'
+descriptive_values_$variable[descriptive_values_$variable %in% 'n_patient_with_thrombectomy'] <- 'N patients (unique) with thrombectomy'
+descriptive_values_$variable[descriptive_values_$variable %in% 'n_patient_exitus'] <- 'N patient with exitus (unique) date (death)'
+descriptive_values_$variable[descriptive_values_$variable %in% 'united_men'] <- 'N Men (%)'
+descriptive_values_$variable[descriptive_values_$variable %in% 'united_women'] <- 'N Women (%)'
+
+
+table <- descriptive_values_ %>% gt(rowname_col = 'variable') %>% 
+  tab_header(
+    title = "Patient-level summary"
+  ) %>% 
+  tab_stubhead(label = "Variable") %>% 
+     cols_label(
+      variable = 'Variable',
+      value = 'n (%)'
+       ) %>% 
+  cols_align(
+  align =  "center",
+  columns = value)
+
+table
+
+comorbidities_ %>% 
+  dplyr::select(descrp, united_comorbidities) %>% gt(rowname_col = 'descrp') %>% 
+  tab_header(
+    title = "Number of comorbidities table input"
+  ) %>%
+     cols_label(
+      descrp = 'Number of comorbidities',
+      united_comorbidities = 'n (%)'
+       ) %>% 
+  cols_align(
+  align =  "center",
+  columns = united_comorbidities)
+```
+
+Following, we imported and converted our DataFrame to an Event Log and check dates. 
+
+
+```{r,echo=FALSE}
+log_info("Analyses start")
+```
 
 
 ```{python, echo = FALSE, warning = FALSE}
 #| label: main code
+import logging
+logging.basicConfig(level=logging.INFO)
+
 
 from aux_scripts.create_event_log import import_data_and_convert_to_event_log, check_dates_hospital_emergency, filter_for_k_freq_traces
 data_path = '../../inputs/data.duckdb'
 trace_theory = str('admission_emergency_care_dt,triage_emergency_care_dt,first_asisstance_medical_dt,internal_neurology_consultation_dt,ct_mri_dt,admission_to_observation_ward_dt,thrombolysis_emergency_dt,discharge_from_emergency_dt')
 
-
+#logging.info('Read database and create eventlog')
 event_log, traces, freq_traces, df = import_data_and_convert_to_event_log(data_path)
+
 
 check_dates_hospital_emergency(data_path)
 
+#logging.info('Extract only 10 most frequent traces and their event log')
 filtered_event_log, df_filtered, traces_filtered = filter_for_k_freq_traces(event_log, traces, freq_traces, df, k=10)
 
 ```
@@ -287,6 +412,7 @@ survival_analysis(df_filtered)
 ```
 
 
+
 ```{r, echo = FALSE, warning = FALSE, out.width = "620px", out.height = "520px", fig.cap="Survival descriptive"}
 #| label: fig-survival_descriptive
 
@@ -294,7 +420,7 @@ include_graphics('../../outputs/surv_analysis.png')
 ```
 
 
-### A- Process mining
+### Process mining
 
 #### Process discovery
 
@@ -307,15 +433,29 @@ Inductive miner traces:
 from aux_scripts.inductive_miner import inductive_miner_algorithm, get_decision_mining
 
 #inductive_miner_algorithm(filtered_event_log)
+logging.info('Get decision mining points')
+try:
+    point_decision = get_decision_mining(df, event_log)
+except:
+    logging.basicConfig(level=logging.INFO)
+    logging.info('Error in function: Get decision mining points')
 
-point_decision = get_decision_mining(df, event_log)
 
 ```
 
 ```{r, echo = FALSE, warning = FALSE, out.width = "2920px",  out.height = "680px", fig.cap="Inductive miner with only filtered traces"}
 #| label: fig-Inductive_miner
 
-include_graphics('../../outputs/inductive_miner_petri_net.png')
+tryCatch(
+  {
+  include_graphics('../../outputs/inductive_miner_petri_net.png')
+  },
+  error=function(cond) {
+    message(paste0("error building plot: inductive miner petri net."))
+    print(paste0("error building plot: inductive miner petri net."))
+  }
+) 
+
 ```
 
 
@@ -364,7 +504,7 @@ rm(init,trace_theory_df,p)
 The Jaccard's similarity measured for k=10 most frequent traces:
 
 ```{r, echo = FALSE, warning = FALSE}
-
+#| label: jaccard similarity 10mostfrequent
 con = dbConnect(duckdb::duckdb(), dbdir=params$data_path, read_only=FALSE)
 
 df <- dbGetQuery(conn = con, 'with seleccion_top10 as (SELECT
@@ -407,6 +547,7 @@ plot[["data"]][["facets_cum"]] <- round(plot[["data"]][["jaccard_similarity"]],2
 
 plot + labs(title='Jaccard similarity measured (10 most frequent traces)') + 
   theme(title = element_text(size = 10))
+rm(df,p,plot)
 
 ```
 
@@ -441,13 +582,31 @@ First we created a petri net with the inductive algorithm that will allow us to 
 ```{r, echo = FALSE, warning = FALSE, out.width = "2920px",  out.height = "680px", fig.cap="Petri net wiht points for decision mining"}
 #| label: fig-decision_mining_petri
 
-include_graphics('../../outputs/decision_mining_petri.png')
+tryCatch(
+  {
+  include_graphics('../../outputs/decision_mining_petri.png')
+  },
+  error=function(cond) {
+    message(paste0("error building plot: inductive miner petri net."))
+    print(paste0("error building plot: inductive miner petri net."))
+  }
+) 
+
 ```
 
 ```{r, echo = FALSE, warning = FALSE, out.width = "2920px",  out.height = "680px", fig.cap="Petri net with activities for decision mining"}
 #| label: fig-decision_mining_petri_act
 
-include_graphics('../../outputs/decision_mining_petri_act.png')
+tryCatch(
+  {
+  include_graphics('../../outputs/decision_mining_petri_act.png')
+  },
+  error=function(cond) {
+    message(paste0("error building plot: inductive miner petri net with activities."))
+    print(paste0("error building plot: inductive miner petri net with activities."))
+  }
+) 
+
 ```
 
 
@@ -457,9 +616,15 @@ After that we created the petri net, we were able to see the importance of the f
 In this case, the point/s is/are: 
 
 ```{python}
-print('The decision point for fibrinolysis in hospital is: '+ point_decision[0])
-print('The decision point for thrombectomy in hospital is: '+ point_decision[1])
-print('The decision point for thrombolysis in emergency is: '+ point_decision[2])
+#| label: print decision point
+try:
+    print('The decision point for fibrinolysis in hospital is: '+ point_decision[0])
+    print('The decision point for thrombectomy in hospital is: '+ point_decision[1])
+    print('The decision point for thrombolysis in emergency is: '+ point_decision[2])
+except ValueError:
+    logging.basicConfig(level=logging.INFO)
+    logging.info('Error in function: Get decision mining points, so it is not possible to print decision point')
+
 ```
 
 If the calculation of the importance of the variables in the decision does not appear for any point, it is because the complete decision mining process has not been carried out for that point due to lack of information complexity of the petri net.
@@ -538,18 +703,23 @@ plot
 ```
 
 
-### B- Estimation of outcomes within a path
+### Estimation of outcomes within a path
 
-#### B.1 Kaplan-Meier survival plot
+#### Kaplan-Meier survival plot
 The kaplan-meier survival plot for the 4 intervention possibilities is shown below:
 
 
 ```{r, echo = FALSE, warning=FALSE}
 #| label: prediction outcomes
 
+log_info('Estimation of outcomes analyses')
 con = dbConnect(duckdb::duckdb(), dbdir=params$data_path, read_only=FALSE)
   
-df <- dbGetQuery(conn = con, "SELECT a.*,b.rank_trace,b.jaccard_similarity,b.dur_trace,b.perc FROM main.patient_view a LEFT JOIN main.prediction_outcomes_db b ON a.patient_id=b.patient_id")
+df <- dbGetQuery(conn = con, "SELECT a.* FROM main.patient_view a ")
+df_ <- dbGetQuery(conn = con, "SELECT * FROM main.prediction_outcomes_db")
+df_ <- df_[!duplicated(df_),]
+df <- left_join(x=df,y=df_, by='patient_id')
+rm(df_)
 
 dbDisconnect(con, shutdown=TRUE)
 
@@ -584,6 +754,7 @@ list_fest_spain <- as.Date(c('2010-01-01','2010-01-06','2010-04-02','2010-05-01'
                              '2022-01-01','2022-01-06','2022-04-15','2022-08-15','2022-10-12','2022-11-01','2022-12-06','2022-12-08',
                              '2023-04-07','2023-05-01','2023-08-15','2023-10-12','2023-11-01','2023-12-06','2023-12-08','2023-12-25'))
 
+log_info('Create temporal variables')
 df1 <- df1 %>% rowwise() %>% mutate(
   start_futime_dt = as.Date(min(admission_emergency_care_dt, hospital_admission_date_dt, na.rm=TRUE)),
   period = (12*(year(start_futime_dt)-year(start_study)) + month(start_futime_dt)),
@@ -600,18 +771,26 @@ df1 <- df1 %>% mutate(
     is.na(exitus_dt) ~ as.numeric(end_study - start_futime_dt)
   )
 )
-
-df1$futime[df1$futime > 365] <- 365
+df1 <- df1 %>% mutate(
+  exitus_1year_from_start_futimedt_bl= case_when(
+    exitus_bl == 1 & futime <= 365 ~ 1,
+    TRUE ~ 0
+  )
+)
+#df1$futime[df1$futime > 365] <- 365
 
 df1$intervention_bl[df1$intervention %in% 'none'] <- 0
 df1$intervention_bl[df1$intervention %in% 'fibrinolysis'] <- 1
 df1$intervention_bl[df1$intervention %in% 'thrombectomy_mec'] <- 1
 df1$intervention_bl[df1$intervention %in% 'combined'] <- 1
 
-df_model <- df1 %>% dplyr::select(patient_id,intervention,intervention_bl,hospital_cd , healthcare_area_cd , age_nm , sex_cd , municipality_code_cd , zip_code_cd , type_admission_cd , hospital_type_discharge_cd , ct_inhospital_bl , mri_inhospital_bl , n_admission_prior_emergency_nm , n_admission_prior_inhospital_nm , n_readmissions_30days_all_cause_bl , antiarrhythmics_prescription_bl , antihypertensive_prescription_bl , antiaggregants_prescription_bl , fibrinolitics_prescriptions_bl ,  modified_rankin_scale_cd , barthel_index_nm , healthcare_area_cd , heart_failure_bl , hypertension_bl , diabetes_bl , atrial_fibrillation_bl , valvular_disease_bl , rank_trace , jaccard_similarity , dur_trace , period,exitus_bl,weekday, weekend_bl, holiday_bl,futime)
+df_model <- df1 %>% dplyr::select(patient_id,intervention,intervention_bl,hospital_cd, healthcare_area_cd , age_nm , sex_cd , municipality_code_cd , zip_code_cd , type_admission_cd , hospital_type_discharge_cd , ct_inhospital_bl , mri_inhospital_bl , n_admission_prior_emergency_nm , n_admission_prior_inhospital_nm , readmissions_30days_bl , antiarrhythmics_prescription_bl , antihypertensive_prescription_bl , antiaggregants_prescription_bl , fibrinolitics_prescriptions_bl ,  modified_rankin_scale_cd , barthel_index_nm , healthcare_area_cd , heart_failure_bl , hypertension_bl , diabetes_bl , atrial_fibrillation_bl , valvular_disease_bl , rank_trace , jaccard_similarity , dur_trace , period,exitus_bl,weekday, weekend_bl, holiday_bl,futime, exitus_1year_from_start_futimedt_bl)
 
 
-surv_obj <- Surv(time=df_model$futime,event=df_model$exitus_bl)
+df_model <- df_model %>% filter(modified_rankin_scale_cd <=5 | is.na(modified_rankin_scale_cd))
+df_model <- df_model %>% filter(hospital_type_discharge_cd %nin% 4 | is.na(hospital_type_discharge_cd))
+
+surv_obj <- Surv(time=df_model$futime,event=df_model$exitus_1year_from_start_futimedt_bl)
 
 df_model$intervention <- factor(df_model$intervention, levels = c("none","fibrinolysis","thrombectomy_mec","combined"))
 
@@ -633,9 +812,9 @@ ggsurvplot(surv_fit, data = df_model, xlab="Days of follow-up",
 
 ```
 
-#### B.2 General COX model
+#### General COX model
 
-A summary (table with all variables and a ggforest with only variables that are statistically significant, *pvalue* < 0.05 (if it is possible)) of the constructed COX model is shown below:
+A summary (table with all variables and a ggforest with only variables that are statistically significant, *pvalue* < 0.01 (if it is possible)) of the constructed COX model is shown below:
 
 ```{r, echo = FALSE, warning=FALSE, fig.height=10, fig.width=10}
 #| label: prediction outcomes cox model
@@ -644,26 +823,51 @@ df_model$sex_cd <- as.character(df_model$sex_cd)
 #df_model$zip_code_cd <- as.character(df_model$zip_code_cd)
 df_model$hospital_type_discharge_cd <- as.character(df_model$hospital_type_discharge_cd)
 
-model_surv <- coxph(surv_obj ~ intervention + hospital_cd + age_nm + sex_cd + zip_code_cd + hospital_type_discharge_cd + ct_inhospital_bl + mri_inhospital_bl + n_admission_prior_emergency_nm + n_admission_prior_inhospital_nm +  antiarrhythmics_prescription_bl + antihypertensive_prescription_bl + antiaggregants_prescription_bl + fibrinolitics_prescriptions_bl +  modified_rankin_scale_cd +  heart_failure_bl + hypertension_bl + diabetes_bl + atrial_fibrillation_bl + valvular_disease_bl + rank_trace + jaccard_similarity + dur_trace + period + holiday_bl + weekend_bl + weekday, data = df_model)
+log_info('Build cox model')
+# No hospital_cd in model
+
+miss_threshold <- 0.2
+df_model_aux <- df_model %>% select(intervention, age_nm, sex_cd, hospital_type_discharge_cd, ct_inhospital_bl, mri_inhospital_bl, n_admission_prior_emergency_nm, n_admission_prior_inhospital_nm,  antiarrhythmics_prescription_bl, antihypertensive_prescription_bl, antiaggregants_prescription_bl, fibrinolitics_prescriptions_bl,  modified_rankin_scale_cd,  heart_failure_bl, hypertension_bl, diabetes_bl, atrial_fibrillation_bl, valvular_disease_bl, rank_trace, jaccard_similarity, dur_trace, period, holiday_bl, weekend_bl, weekday)
+a <- names(df_model_aux)[sapply(df_model_aux, function(x) (sum(is.na(x))/nrow(df_model_aux)) <= miss_threshold)]
+df_model_aux <- df_model_aux %>% select(a)
+formula_model <- paste0(colnames(df_model_aux), collapse = ' + ')
+rm(df_model_aux)
+formula_model <- as.formula(paste0('surv_obj ~ ',formula_model))
+
+model_surv <- coxph(formula_model, data = df_model)
 
 #survminer::ggforest(model_surv,data=as.data.frame(df_model))
 
-df_model_ <- df_model %>% dplyr::select(intervention_bl, exitus_bl, hospital_cd , age_nm , sex_cd , zip_code_cd , hospital_type_discharge_cd , ct_inhospital_bl , mri_inhospital_bl , n_admission_prior_emergency_nm , n_admission_prior_inhospital_nm ,  antiarrhythmics_prescription_bl , antihypertensive_prescription_bl , antiaggregants_prescription_bl , fibrinolitics_prescriptions_bl ,  modified_rankin_scale_cd ,  heart_failure_bl , hypertension_bl , diabetes_bl , atrial_fibrillation_bl , valvular_disease_bl , rank_trace , jaccard_similarity , dur_trace , period , holiday_bl , weekend_bl , weekday )
+df_model_ <- df_model %>% dplyr::select(intervention_bl, exitus_bl, hospital_cd , age_nm , sex_cd , zip_code_cd , hospital_type_discharge_cd , ct_inhospital_bl , mri_inhospital_bl , n_admission_prior_emergency_nm , n_admission_prior_inhospital_nm ,  antiarrhythmics_prescription_bl , antihypertensive_prescription_bl , antiaggregants_prescription_bl , fibrinolitics_prescriptions_bl ,  modified_rankin_scale_cd ,  heart_failure_bl , hypertension_bl , diabetes_bl , atrial_fibrillation_bl , valvular_disease_bl , rank_trace , jaccard_similarity , dur_trace , period , holiday_bl , weekend_bl , weekday, exitus_1year_from_start_futimedt_bl)
 sum_model_surv <- summary(model_surv)
 p <- as.data.frame(sum_model_surv$coefficients)
-p1 <- p %>% filter(`Pr(>|z|)` <= 0.05)
+p1 <- p %>% filter(`Pr(>|z|)` <= 0.01)
 
 aux1 <- data.frame(variables_df = colnames(df_model_))
 aux2 <- data.frame(variables_model = rownames(p1))
 aux3 <- data.frame(var=str_extract(aux2$variables_model,str_c(aux1$variables_df,collapse = '|')))
 aux3 <- aux3 %>% filter(!is.na(var))
+
 aux3 <- unique(aux3$var)
 
-
-tab_model(model_surv)
 tryCatch(
   {
-forest_model(model_surv, covariates = aux3)
+
+
+  tab_model(model_surv)
+    
+  },
+  error=function(cond) {
+    summary(model_surv)
+  }
+) 
+
+
+tryCatch(
+  {
+
+
+  forest_model(model_surv, covariates = aux3)
     
   },
   error=function(cond) {
@@ -685,6 +889,7 @@ A test to see if proportional hazard assumption is satisfied, can be seen from t
 #| label: prediction outcomes cox model test
 tryCatch(
   {
+log_info('Test cox model')
 cox.zph(model_surv)
     
   },
@@ -707,11 +912,11 @@ df_model_$intervention_fibrinolysis_bl <- if_else(df_model$intervention == 'fibr
 df_model_$intervention_thrombectomy_mec_bl <- if_else(df_model$intervention == 'thrombectomy_mec',1,0)
 df_model_$intervention_combined_bl <- if_else(df_model$intervention == 'combined',1,0)
 
-df_model_ <- df_model_ %>% rename(`fibrinolysis intervention bl` = intervention_fibrinolysis_bl, `thrombectomy mechanic intervention bl` = intervention_thrombectomy_mec_bl, `combined intervention bl` = intervention_combined_bl, `exitus bl` = exitus_bl)
+df_model_ <- df_model_ %>% rename(`fibrinolysis intervention bl` = intervention_fibrinolysis_bl, `thrombectomy mechanic intervention bl` = intervention_thrombectomy_mec_bl, `combined intervention bl` = intervention_combined_bl, `exitus bl` = exitus_1year_from_start_futimedt_bl)
 ```
 
 
-#### B.3 Propension to intervention model
+#### Propension to intervention model
 
 
 
@@ -721,8 +926,7 @@ df_model_ <- df_model_ %>% rename(`fibrinolysis intervention bl` = intervention_
 ### porpensity_global 
 tryCatch(
   {
-    formula_propensity_model_global <- as.formula(paste0('intervention_bl ~ ',formula_model))
-    
+    formula_propensity_model_global <- as.formula(paste0('intervention_bl ~ hospital_cd +',formula_model))
     propensity_model_global <- glm(formula_propensity_model_global, data = df_model_, family = binomial)
     df_model_$probabilities_global <- propensity_model_global %>% predict(df_model_, type = "response")
     
@@ -747,7 +951,7 @@ The summary is displayed propensity to fibrinolysis intervention model:
 
 tryCatch(
   {
-    formula_propensity_model_fibri <- as.formula(paste0('`fibrinolysis intervention bl` ~ ',formula_model))
+    formula_propensity_model_fibri <- as.formula(paste0('`fibrinolysis intervention bl` ~ hospital_cd + ',formula_model))
     
     propensity_model_fibri <- glm(formula_propensity_model_fibri, data = df_model_, family = binomial)
     df_model_$probabilities_fibrinolysis <- propensity_model_fibri %>% predict(df_model_, type = "response")
@@ -774,7 +978,7 @@ The summary is displayed propensity to thrombectomy mechanic intervention model:
 
 tryCatch(
   {
-    formula_propensity_thrombectomy_mec <- as.formula(paste0('`thrombectomy mechanic intervention bl` ~ ',formula_model))
+    formula_propensity_thrombectomy_mec <- as.formula(paste0('`thrombectomy mechanic intervention bl` ~ hospital_cd + ',formula_model))
     
     propensity_model_throm_mec <- glm(formula_propensity_thrombectomy_mec, data = df_model_, family = binomial)
     df_model_$probabilities_thrombectomy_mec <- propensity_model_throm_mec %>% predict(df_model_, type = "response")
@@ -800,7 +1004,7 @@ The summary is shown propensity to combined intervention model:
 
 tryCatch(
   {
-    formula_propensity_combined <- as.formula(paste0('`combined intervention bl` ~ ',formula_model))
+    formula_propensity_combined <- as.formula(paste0('`combined intervention bl` ~ hospital_cd + ',formula_model))
     
     propensity_model_combined <- glm(formula_propensity_combined, data = df_model_, family = binomial)
     df_model_$probabilities_combined <- propensity_model_combined %>% predict(df_model_, type = "response")
@@ -817,7 +1021,7 @@ tryCatch(
 
 ```
 
-#### B.4 Model to predict exitus with PS as covariable
+#### Model to predict exitus with PS as covariable
 
 
 
@@ -840,10 +1044,27 @@ tryCatch(
 
 ```
 
+```{r, echo = FALSE, warning=FALSE}
+#| label: prediction outcomes ps_thromb model
 
+
+
+tryCatch(
+  {
+    model_thrombectomy_mec <- glm(`exitus bl` ~ ps_thrombectomy_mec, data=df_model_, family = binomial)
+    tab_model(model_thrombectomy_mec)
+    
+  },
+  error=function(cond) {
+    message(paste0("error building model: propensity score thrombectomy mechanic as covariable"))
+    print(paste0("error building model: propensity score thrombectomy mechanic as covariable"))
+  }
+)
+
+```
 
 ```{r, echo = FALSE, warning=FALSE}
-#| label: prediction outcomes ps_throm model
+#| label: prediction outcomes ps_comb model
 
 
 
@@ -862,25 +1083,6 @@ tryCatch(
 ```
 
 
-
-```{r, echo = FALSE, warning=FALSE}
-#| label: prediction outcomes ps_comb model
-
-
-
-tryCatch(
-  {
-    model_thrombectomy_mec <- glm(`exitus bl` ~ ps_thrombectomy_mec, data=df_model_, family = binomial)
-    tab_model(model_thrombectomy_mec)
-    
-  },
-  error=function(cond) {
-    message(paste0("error building model: propensity score thrombectomy mechanic as covariable"))
-    print(paste0("error building model: propensity score thrombectomy mechanic as covariable"))
-  }
-)
-
-```
 
 
 
@@ -905,6 +1107,7 @@ tryCatch(
   }
 )
 
+log_info('Analyses finish')
 ```
 
 

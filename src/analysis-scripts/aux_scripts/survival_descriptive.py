@@ -9,11 +9,11 @@ def survival_analysis(df_filtered):
     end_study = datetime.date(year=2022, month=12, day=31)
     df_filtered['status'] = True
     df_filtered.loc[df_filtered['exitus_dt'].isna(), 'status'] = False
-
+    df_filtered['start_futime'] = df_filtered[['hospital_admission_date_dt', 'admission_emergency_care_dt']].min(axis=1)
     df_filtered['survival_in_days'] = (pd.to_datetime(end_study) - df_filtered[
-        'admission_emergency_care_dt']) / np.timedelta64(1, 'D')
+        'start_futime']) / np.timedelta64(1, 'D')
     df_filtered.loc[df_filtered['exitus_dt'].notna(), 'survival_in_days'] = (df_filtered['exitus_dt'] - df_filtered[
-        'admission_emergency_care_dt']) / np.timedelta64(1, 'D')
+        'start_futime']) / np.timedelta64(1, 'D')
 
     fig, ax = plt.subplots()
     kmf = KaplanMeierFitter()
@@ -30,7 +30,7 @@ def survival_analysis(df_filtered):
             xlabel='Days',
             ylabel='Estimated Probability of Survival'
         )
-
+        plt.xlim(0, 5000)
     fig.savefig('../../outputs/surv_analysis.png')
     plt.close()
     df_filtered1 = df_filtered[['rank_trace', 'survival_in_days', 'status']]

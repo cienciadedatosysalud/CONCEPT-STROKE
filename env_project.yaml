@@ -18,6 +18,9 @@ dependencies:
 - r-sjplot=2.8.15
 - r-forestmodel=0.6.2
 - r-plotly=4.10.2
+- r-gt=0.9.0
+- r-htmlwidgets=1.6.2
+- r-reshape2=1.4.4
 - r-igraph
 - conda
 - numpy==1.23.5
