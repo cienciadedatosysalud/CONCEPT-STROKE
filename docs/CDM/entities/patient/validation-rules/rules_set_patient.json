@@ -47,9 +47,9 @@
             "description": "Rule for column hospital_type_discharge_cd"
         },
         {
-            "expression": "inhospital_trombectomy_bl IN ('0', '1')",
-            "name": "inhospital_trombectomy_bl",
-            "description": "Rule for column inhospital_trombectomy_bl"
+            "expression": "inhospital_thrombectomy_bl IN ('0', '1')",
+            "name": "inhospital_thrombectomy_bl",
+            "description": "Rule for column inhospital_thrombectomy_bl"
         },
         {
             "expression": "inhospital_fibrinolysis_bl IN ('0', '1')",
@@ -117,14 +117,14 @@
             "description": "Rule for column discharge_from_emergency_dt"
         },
         {
-            "expression": "type_discharge_emergency_bl IN ('0', '1')",
-            "name": "type_discharge_emergency_bl",
-            "description": "Rule for column type_discharge_emergency_bl"
+            "expression": "discharge_emergency_bl IN ('0', '1')",
+            "name": "discharge_emergency_bl",
+            "description": "Rule for column discharge_emergency_bl"
         },
         {
-            "expression": "n_readmissions_30days_all_cause_bl IN ('0', '1')",
-            "name": "n_readmissions_30days_all_cause_bl",
-            "description": "Rule for column n_readmissions_30days_all_cause_bl"
+            "expression": "readmissions_30days_bl IN ('0', '1')",
+            "name": "readmissions_30days_bl",
+            "description": "Rule for column readmissions_30days_bl"
         },
         {
             "expression": "anticoagulants_prescriptions_bl IN ('0', '1')",

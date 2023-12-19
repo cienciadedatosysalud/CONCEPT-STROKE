@@ -1,12 +1,13 @@
-![Logo of the project](https://cienciadedatosysalud.org/wp-content/uploads/logo-Data-Science-VPM.png)
+![Logo of the project](main_logo.png)
 
 <small><i>This project follows the structure built using the [Common Data Model Builder](https://github.com/cienciadedatosysalud/cdmb), a tool that allows you to create common data models to facilitate interoperability and reproducibility of the analyses.</i></small>
 
 
 # CONCEPT-STROKE
+
 CONCEPT-STROKE is a study analysing the acute care received by patients with acute ischaemic stroke where the general aim is to estimate the effectiveness and efficiency of the care pathway followed by acute ischaemic stroke patients, using Real World Data (RWD) routinely collected by five Spanish Regional Health Systems.
 
-### CONCEPT Project Coordinator
+## CONCEPT Project Coordinator
 **[Enrique Bernal-Delgado MD PhD](https://orcid.org/0000-0002-0961-3298)**
 
 Lead Researcher Senior Researcher in Healthcare Services and Policies.
@@ -21,7 +22,26 @@ regional Stroke Plans.
 - To analyse the impact of specific care interventions within and across care paths, in terms of patients survival.
 - To compare the traditional analytical methods with process mining methods in terms of modeling quality, prediction performance and information provided.
 
-## HOW TO RUN
+
+## Cohort definition:
+
+The cohort is defined as patients admitted to hospital due to acute ischaemic stroke.
+
+### Inclusion criteria: 
+
+Patients aged 18 years or older admitted to the emergency department (or with an unplanned hospital admission) with a principal diagnosis of acute ischaemic stroke during the study period.
+
+### Exclusion criteria: 
+
+Patients aged 17 years or younger; Patients with a diagnosis of acute haemorrhagic stroke or with other non-specific stroke diagnoses.
+
+## Study period:
+
+From 01-01-2010 until 31-12-2022
+
+## IN ORDER TO RUN THE DOCKER FOLLOW THE NEXT STEPS
+
+### 1-HOW TO RUN
 Use the following code snippet to create the container.
 ```bash
 docker pull ghcr.io/cienciadedatosysalud/concept-stroke:latest
@@ -31,76 +51,12 @@ docker run -d -p 127.0.0.1:3000:3000 --name concept-stroke-aspire ghcr.io/cienci
 ```
 Open your web browser at http://localhost:3000
 
-## Analytical pipeline
-## Outputs
-Outputs structure and content is described below including the files and folders that are generated when creating a research project with the `cdmb` Python library. There are four main folders corresponding to:
+### 2-Run the analysis
 
-- __docs/CDM/__
-  - **cdmb_config.json**: Configuration file.
-  - **cohort_definition_inclusion.csv**: csv file that defines the criteria (i.e., codes) for inclusion in a cohort.
-  - **cohort_definition_exclusion.csv**: csv file that defines the criteria (i.e., codes) for exclusion in a cohort.
-  - **common_datamodel.xlsx**: The definition of the common data model in Excel format.
-  - **entities/**: Folder structure where, for each defined entity, the catalogs and the established validation rules are stored.
-  - **ER.gv, ER.gv.png**: an Entity-Relationship Diagram of the entities included in the CDM.
-  - **synthetic-data/**: Folder structure contaning an automatically generated set of 1000 synthetic records per entity included en the CDM.
-  - **hashed_files_list.json**: List of the files generated or used after generating the project with their md5 hash. This file must be kept hidden 
-and should be used to cross-check with the results obtained from the analysis from the original input files.
-- __inputs/__
-  - **data.duckdb**: Database that temporarily contains the data entered by the user (synthetic data by default)
-- __outputs/__
-  - (Default directory of all the outputs produced in the project execution)
-- __src/__
-  - __analysis-scripts/__
-    - (directory where the analysis scripts developed by the user are stored)
-    - **_quarto.yml**: File containing the Metadata to execute Quarto documents.
-  - __check_load-scripts/__
-    - **check_load.py**: Script in charge of the mapping between the files introduced by the user (./inputs) and map them to the defined entities (inputs/data.duckdb). 
-    In the loading process, the following checks are performed: Name of the variables match; the format/type of the variables match those established in the configuration.
-    - __inputs/__: Auxiliary folder for the script 'check_load.py'.
-  - __dqa-scripts/__
-    - **dqa.py**: Data Quality Assesment script by default.
-  - **validation-scripts/**
-    - **validator.py**: Script in charge of applying the validation rules to the data.
-    - **valididator_report.qmd**: Quarto document that generates a report in html from the results obtained from 'validator.py'. 
-    - **_quarto.yml**: File containing metadata to execute Quarto documents.
-- **ro-crate-metadata.json**: Accessible and practical formal metadata description for use in a wider variety of situations, 
-from an individual researcher working with a folder of data, to large data-intensive computational research environments. For more information, visit [RO-Crate](https://www.researchobject.org/ro-crate/).
-- **man_container_deployment.md**: From Data Science for Health Services and Policy Research group we provide in the following
-  GitHub repository, a solution, for the deployment of the generated project. This step is optional.
-- **LICENSE.md**: Project license.
-## Requirements/Dependencies 
-__*Note that dependencies may vary depending on user modifications!*__
-
-## R dependencies
-Version of Rbase used: **4.2.2**
-
-Version of [Quarto](https://quarto.org/) used: **1.1.149**
-
-| library  |  version  | link |
-|---|---|---|
-| bupaverse  |  0.1.0 | https://doi.org/10.1016/j.knosys.2018.10.018  |
-| Hmisc  |  4.7.1  | https://cran.r-project.org/package=Hmisc  |
-| keras  | 2.11.1  | https://cran.r-project.org/package=keras  |
-| knitr  | 1.41	 | https://yihui.org/knitr/  |
-| mgcv  | 1.8.41	 |  https://cran.r-project.org/web/packages/mgcv/index.html |
-| pacman  | 0.5.1	 | http://github.com/trinker/pacman  |
-| processpredictR  | 0.1.0	 | https://cran.r-project.org/package=processpredictR  |
-| rmarkdown  | 2.18	 |  https://github.com/rstudio/rmarkdown  |
-| tensorflow  | 2.11.0	 | https://cran.r-project.org/package=tensorflow  |
-| tidyverse  | 1.3.2	 | https://doi.org/10.21105/joss.01686  |
-
-## Python dependencies
-Version of Python used: **3.8**
-| library  |  version  | link |
-|---|---|---|
-| pm4py  | 2.7.2  | https://pm4py.fit.fraunhofer.de/  |
-| datetime  | 5.1  |   |
-| pandas  | 1.5.3  | https://pandas.pydata.org/  |
-| numpy  | 1.23.5  | https://numpy.org/  |
-| matplotlib  |  3.6.2  | https://matplotlib.org/  |
-| tabulate  | 0.9.0  | https://github.com/astanin/python-tabulate  |
-| lifelines  | 0.27.4  | https://github.com/CamDavidsonPilon/lifelines  |
-| scikit-learn  | 1.2.2  | https://scikit-learn.org/stable/  |
+Follow the steps below.
+  1. Map your data in the "MAP DATA" tab.
+  2. If everything has worked well, in the "RUN ANALYSIS" tab, select the project "CONCEPT-STROKE" and select the script "**analysis_concept.qmd**"
+  3. Go to the "OUTPUTS" tab and download the results.
 
 # Authoring
 
@@ -115,7 +71,6 @@ Version of Python used: **3.8**
 __Project leader: [Bernal-Delgado, Enrique](https://orcid.org/0000-0002-0961-3298)__
 
 
-# Previous version(s):
 
 # How to contribute
 - Repository: https://github.com/cienciadedatosysalud/CONCEPT-STROKE
