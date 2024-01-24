@@ -35,3 +35,5 @@ jobs:
           push: true
           tags: ghcr.io/cienciadedatosysalud/concept-stroke:${{env.TAG_NAME}},ghcr.io/cienciadedatosysalud/concept-stroke:latest
           file: ./Dockerfile
+          build-args: |
+            pipeline_version=${{ env.TAG_NAME }}
