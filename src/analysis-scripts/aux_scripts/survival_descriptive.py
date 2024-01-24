@@ -40,7 +40,8 @@ def survival_analysis(df_filtered):
 
     cph = CoxPHFitter(penalizer=0.1)
     cph.fit(df_filtered1, duration_col='survival_in_days', event_col='status')
-    cph.print_summary()
+    #cph.print_summary()
+    return cph
 
 
 

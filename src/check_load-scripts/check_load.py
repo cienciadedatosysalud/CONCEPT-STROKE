@@ -95,8 +95,10 @@ def check_file(entity_structure):
             pass
         elif f == 'boolean':
             dtype_[c] = pd.BooleanDtype()
-        elif f == 'date' or f == 'datetime':
-            parse_dates.append(c)
+        elif f == 'date':
+            dtype_[c] = pd.StringDtype()
+        elif f == 'datetime':
+            parse_dates.append(c)    
         elif f == 'integer':
             dtype_[c] = pd.Int64Dtype()
         elif f == 'double':
@@ -184,7 +186,15 @@ if __name__ == '__main__':
     except FileNotFoundError as e:
         logging.error("Configuration file "" is missing!")
         exit(1)
-    logging.info("Configuration file loaded")
+    logging.info("Configuration file loaded\n")
+    CDMB_VERSION = configuration_file["cdmb_version"] if "cdmb_version" in configuration_file else "Non-versioned"
+    ASPIRE_VERSION = os.environ.get('ASPIRE_VERSION', 'Non-versioned')
+    PIPELINE_VERSION = os.environ.get('PIPELINE_VERSION', 'Non-versioned')
+    logging.info("#########################################")
+    logging.info(f"# CDMB version: {CDMB_VERSION}")
+    logging.info(f"# ASPIRE version: {ASPIRE_VERSION}")
+    logging.info(f"# PIPELINE version: {PIPELINE_VERSION}")
+    logging.info("#########################################\n")
     csv_files = glob.glob(upload_files_path + "/*.csv", recursive=True)
     uploaded_file_structure = []
     logging.info(f"-Found {len(csv_files)} uploaded files to check and map!")
