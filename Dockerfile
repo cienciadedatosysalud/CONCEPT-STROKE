@@ -1,4 +1,6 @@
 FROM ghcr.io/cienciadedatosysalud/aspire:latest
+ARG pipeline_version="Non-versioned"
+ENV PIPELINE_VERSION=$pipeline_version
 
 USER root
 RUN apt update && apt install -y --no-install-recommends \

@@ -24,8 +24,11 @@ params:
 .justify {
   text-align: justify !important
 }
+.scrolling {
+  max-height: 500px;
+  overflow-y: auto;
+}
 ```
-
 
 
 ## Introduction
@@ -407,17 +410,35 @@ The kaplan-meier curves for the 10 most common pathways and the COX model summar
 
 from aux_scripts.survival_descriptive import survival_analysis
 
-survival_analysis(df_filtered)
+cph = survival_analysis(df_filtered)
 
 ```
 
 
+::: {.panel-tabset}
 
-```{r, echo = FALSE, warning = FALSE, out.width = "620px", out.height = "520px", fig.cap="Survival descriptive"}
+##### Kaplan-Meier curves
+
+```{r, echo = FALSE, warning = FALSE, out.width = "620px", out.height = "520px", fig.cap="Survival descriptive (Kaplan-Meier curves)"}
 #| label: fig-survival_descriptive
 
 include_graphics('../../outputs/surv_analysis.png')
 ```
+
+
+##### Cox Model (summary)
+
+```{python, echo = FALSE, warning = FALSE, fig.cap="Survival analysis"}
+#| label: cox survival analysis results
+
+cph.print_summary()
+del cph
+
+```
+
+:::
+
+
 
 
 ### Process mining
@@ -443,7 +464,9 @@ except:
 
 ```
 
-```{r, echo = FALSE, warning = FALSE, out.width = "2920px",  out.height = "680px", fig.cap="Inductive miner with only filtered traces"}
+:::{.scrolling}
+
+```{r, echo = FALSE, warning = FALSE, out.width = "1920px",  out.height = "980px", fig.cap="Inductive miner with only filtered traces"}
 #| label: fig-Inductive_miner
 
 tryCatch(
@@ -458,7 +481,7 @@ tryCatch(
 
 ```
 
-
+:::
 
 #### Conformance checking
 
@@ -578,8 +601,12 @@ include_graphics('../../outputs/histogram_jaccard_similarity.png')
 
 First we created a petri net with the inductive algorithm that will allow us to know the different decision points, we can see that the two images below are the same petri net, showing in the first one the decision points and in the second one the activities (transitions). In this section, in order to create a petri net with decision points, it was necessary to delete records from the event log.
 
+:::{.panel-tabset}
 
-```{r, echo = FALSE, warning = FALSE, out.width = "2920px",  out.height = "680px", fig.cap="Petri net wiht points for decision mining"}
+##### Decision mining with points (petri net)
+:::{.scrolling}
+
+```{r, echo = FALSE, warning = FALSE,out.width = "1920px",  out.height = "980px", fig.cap="Petri net with points for decision mining"}
 #| label: fig-decision_mining_petri
 
 tryCatch(
@@ -593,8 +620,10 @@ tryCatch(
 ) 
 
 ```
-
-```{r, echo = FALSE, warning = FALSE, out.width = "2920px",  out.height = "680px", fig.cap="Petri net with activities for decision mining"}
+:::
+##### Decision mining with activities (petri net)
+:::{.scrolling}
+```{r, echo = FALSE, warning = FALSE, out.width = "1920px",  out.height = "980px", fig.cap="Petri net with activities for decision mining"}
 #| label: fig-decision_mining_petri_act
 
 tryCatch(
@@ -609,6 +638,9 @@ tryCatch(
 
 ```
 
+:::
+
+:::
 
 
 After that we created the petri net, we were able to see the importance of the features at decision/s point/s.
@@ -629,23 +661,23 @@ except ValueError:
 
 If the calculation of the importance of the variables in the decision does not appear for any point, it is because the complete decision mining process has not been carried out for that point due to lack of information complexity of the petri net.
 
-
+::: {.panel-tabset}
 ```{r, echo = FALSE, results='asis',warning = FALSE}
 #| label: fig-barplot_features_importance
 list_files <- list.files(path = '../../outputs', pattern = 'barplot_features_importance_', full.names = TRUE)
-cat("::: {.panel-tabset} \n")
+#cat("::: {.panel-tabset} \n")
 for (i in 1:length(list_files)){
-  cat("##### Decision point ", i, "\n")
+  cat("##### Decision point ", i, "\n\n")
   cat("\n")
   cat(paste0("![](",list_files[i],")"), "\n")
   #include_graphics(list_files[i])
-  cat("\n")
+  cat("\n\n")
 }
-cat(":::")
+#cat(":::")
 
 
 ```
-
+:::
 
 
 #### Prediction
@@ -667,10 +699,7 @@ eval_compare_prediction <- predict_next_activity_function(params$data_path,n_epo
 ```{r, echo = FALSE, warning = FALSE}
 #| label: print eval model
 
-
-
 round(eval_compare_prediction$eval,2)
-
 
 ```
 
@@ -816,7 +845,7 @@ ggsurvplot(surv_fit, data = df_model, xlab="Days of follow-up",
 
 A summary (table with all variables and a ggforest with only variables that are statistically significant, *pvalue* < 0.01 (if it is possible)) of the constructed COX model is shown below:
 
-```{r, echo = FALSE, warning=FALSE, fig.height=10, fig.width=10}
+```{r, echo = FALSE, warning=FALSE}
 #| label: prediction outcomes cox model
 
 df_model$sex_cd <- as.character(df_model$sex_cd)
@@ -849,7 +878,15 @@ aux3 <- data.frame(var=str_extract(aux2$variables_model,str_c(aux1$variables_df,
 aux3 <- aux3 %>% filter(!is.na(var))
 
 aux3 <- unique(aux3$var)
+```
 
+
+::: {.panel-tabset}
+
+
+##### General COX model (summary)
+```{r, echo = FALSE, warning=FALSE, fig.height=10, fig.width=10}
+#| label: summary cox model
 tryCatch(
   {
 
@@ -862,7 +899,12 @@ tryCatch(
   }
 ) 
 
+```
 
+##### General COX model forest plot (only significative variables)
+
+```{r, echo = FALSE, warning=FALSE, fig.height=10, fig.width=10}
+#| label: forest cox model
 tryCatch(
   {
 
@@ -880,6 +922,7 @@ tryCatch(
 
 ```
 
+:::
 
 A test to see if proportional hazard assumption is satisfied, can be seen from the overall summary, *pvalue* < 0.05 indicates that proportional hazard assumption is not satisfied. If the test calculation is not possible, this could occur when there are collinear variables in the COX model, or when there are too few events.
 
@@ -941,8 +984,10 @@ tryCatch(
 ) 
 ```
 
+::: {.panel-tabset}
 
-The summary is displayed propensity to fibrinolysis intervention model:
+##### Propensity to fibrinolysis intervention model (summary)
+
 
 ```{r, echo = FALSE, warning=FALSE}
 #| label: prediction outcomes propensity_fibrinolisys
@@ -968,7 +1013,9 @@ tryCatch(
 
 ```
 
-The summary is displayed propensity to thrombectomy mechanic intervention model:
+
+##### Propensity to thrombectomy mechanic intervention model (summary)
+
 
 
 ```{r, echo = FALSE, warning=FALSE}
@@ -995,7 +1042,8 @@ tryCatch(
 
 ```
 
-The summary is shown propensity to combined intervention model:
+##### Propensity to combined intervention model (summary)
+
 
 
 ```{r, echo = FALSE, warning=FALSE}
@@ -1021,9 +1069,12 @@ tryCatch(
 
 ```
 
+:::
+
 #### Model to predict exitus with PS as covariable
 
-
+::: {.panel-tabset}
+#####  Model with propensity score fibrinolysis as covariable (summary)
 
 ```{r, echo = FALSE, warning=FALSE}
 #| label: prediction outcomes ps_fibri model
@@ -1044,6 +1095,9 @@ tryCatch(
 
 ```
 
+
+#####  Model with propensity score thrombectomy mechanic as covariable (summary)
+
 ```{r, echo = FALSE, warning=FALSE}
 #| label: prediction outcomes ps_thromb model
 
@@ -1062,6 +1116,9 @@ tryCatch(
 )
 
 ```
+
+
+#####  Model with propensity score combined as covariable (summary)
 
 ```{r, echo = FALSE, warning=FALSE}
 #| label: prediction outcomes ps_comb model
@@ -1083,10 +1140,10 @@ tryCatch(
 ```
 
 
+#####  General model with all propensity score calculated (summary)
 
 
-
-Finally, a model is built to predict exitus with PS calculated in each of the previous models as covariable and PS any interaction as offset:
+A general model is built to predict exitus with PS calculated in each of the previous models as covariable and PS any interaction as offset:
 
 
 ```{r, echo = FALSE, warning=FALSE}
@@ -1110,5 +1167,5 @@ tryCatch(
 log_info('Analyses finish')
 ```
 
-
+:::
 
