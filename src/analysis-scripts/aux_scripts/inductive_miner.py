@@ -11,11 +11,12 @@ import logging
 
 def inductive_miner_algorithm(event_carac):
     tree = inductive_miner.apply(event_carac)
-    gviz = pt_visualizer.apply(tree)
-    pn_visualizer.save(gviz, "../../outputs/inductive_miner_tree.png")
+    #gviz = pt_visualizer.apply(tree)
+    #pn_visualizer.save(gviz, "../../outputs/inductive_miner_tree.png")
     # Convert tree to petri net
     net, initial_marking, final_marking = convert_to_petri_net(tree)
     gviz = pn_visualizer.apply(net, initial_marking, final_marking)
+    #gviz.show()
     pn_visualizer.save(gviz, "../../outputs/inductive_miner_petri_net.png")
 
 
@@ -43,9 +44,9 @@ def get_points(net_: PetriNet):
 
 def get_decision_mining(df, event_log):
     df_carac = df[
-        ['patient_id', 'age_nm', 'sex_cd', 'hospital_cd', 'healthcare_area_cd', 'zip_code_cd', 'hospital_type_discharge_cd', 'ct_inhospital_bl', 'mri_inhospital_bl',
-         'type_admission_cd', 'antiarrhythmics_prescription_bl', 'antihypertensive_prescription_bl', 'antiaggregants_prescription_bl','fibrinolitics_prescriptions_bl', 
-         'modified_rankin_scale_cd','heart_failure_bl','hypertension_bl','diabetes_bl','atrial_fibrillation_bl','valvular_disease_bl']]
+        ['patient_id', 'age_nm', 'sex_cd', 'hospital_cd', 'healthcare_area_cd', 'ct_inhospital_bl', 'mri_inhospital_bl',
+         'type_admission_cd','antiarrhythmics_prescription_bl', 'antihypertensive_prescription_bl', 'antiaggregants_prescription_bl','fibrinolitics_prescriptions_bl',
+         'heart_failure_bl','hypertension_bl','diabetes_bl','atrial_fibrillation_bl','valvular_disease_bl']]
          
     event_log = event_log[['case:concept:name','concept:name','time:timestamp']]
     event_carac = event_log.merge(df_carac, left_on='case:concept:name', right_on='patient_id', how='left')

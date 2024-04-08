@@ -14,7 +14,8 @@ def survival_analysis(df_filtered):
         'start_futime']) / np.timedelta64(1, 'D')
     df_filtered.loc[df_filtered['exitus_dt'].notna(), 'survival_in_days'] = (df_filtered['exitus_dt'] - df_filtered[
         'start_futime']) / np.timedelta64(1, 'D')
-
+    df_filtered.loc[(df_filtered['exitus_dt'].notna()) & (df_filtered['survival_in_days'] > 365), 'status'] = False
+    max_value = df_filtered['survival_in_days'].max()
     fig, ax = plt.subplots()
     kmf = KaplanMeierFitter()
     for value in df_filtered['rank_trace'].unique():
@@ -30,8 +31,9 @@ def survival_analysis(df_filtered):
             xlabel='Days',
             ylabel='Estimated Probability of Survival'
         )
-        plt.xlim(0, 5000)
-    fig.savefig('../../outputs/surv_analysis.png')
+        plt.legend(loc='upper right')
+        plt.xlim(0, 365)
+    fig.savefig('../../outputs/surv_analysis_KM_curves_descriptive.png')
     plt.close()
     df_filtered1 = df_filtered[['rank_trace', 'survival_in_days', 'status']]
     dummies_rank_trace = pd.get_dummies(df_filtered1["rank_trace"], prefix='trace')

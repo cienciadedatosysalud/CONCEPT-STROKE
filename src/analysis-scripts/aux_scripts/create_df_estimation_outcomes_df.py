@@ -13,33 +13,35 @@ def df_model_estimation_outcomes(data_path, df, event_log, traces, freq_traces, 
     plt.xlabel('Jaccard similarity', fontsize=14)
     plt.ylabel('Frequency', fontsize=14)
     plt.title('Histogram jaccard similarity', fontsize=16)
-    plt.xlim((0,1))
+    #plt.xlim((0,1))
     plt.rc('axes', titlesize=14)  # fontsize of the axes title
     plt.savefig('../../outputs/histogram_jaccard_similarity.png')
     plt.close()
-    df = df.merge(traces[['patient_id', 'rank_trace', 'jaccard_similarity','perc']], on=['patient_id'], how='left')
+    df = df.merge(traces[['patient_id','trace','freq_trace', 'rank_trace', 'jaccard_similarity','perc']], on=['patient_id'], how='left')
     result = event_log.groupby('case:concept:name')['time:timestamp'].agg(['min','max']).reset_index()
     result['dur_trace'] = (result['max']-result['min'])/ np.timedelta64(1, 'D')
     result.rename(columns={'case:concept:name': 'patient_id'},inplace=True)
     df = df.merge(result[['patient_id','dur_trace']], on=['patient_id'], how='left')
-    df_ = df[['patient_id', 'rank_trace', 'jaccard_similarity', 'dur_trace','perc']]
+    df_ = df[['patient_id', 'trace','freq_trace','rank_trace', 'jaccard_similarity', 'dur_trace','perc']]
     traces_ = traces[['patient_id', 'trace', 'freq_trace','perc']]
     con = duckdb.connect(data_path)
 
     con.sql('''CREATE OR REPLACE TABLE prediction_outcomes_db(
     patient_id VARCHAR,
+    trace VARCHAR,
+    freq_trace VARCHAR,
     rank_trace VARCHAR,
     jaccard_similarity DOUBLE,
     dur_trace DOUBLE,
     perc DOUBLE)''')
     con.sql("INSERT INTO prediction_outcomes_db SELECT * from df_")
 
-    con.sql('''CREATE OR REPLACE TABLE traces_db(
-    patient_id VARCHAR,
-    trace VARCHAR,
-    freq_trace BIGINT,
-    perc DOUBLE)''')
-    con.sql("INSERT INTO traces_db SELECT * from traces_")
+    # con.sql('''CREATE OR REPLACE TABLE traces_db(
+    # patient_id VARCHAR,
+    # trace VARCHAR,
+    # freq_trace BIGINT,
+    # perc DOUBLE)''')
+    # con.sql("INSERT INTO traces_db SELECT * from traces_")
     con.close()
 
 

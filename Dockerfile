@@ -7,7 +7,8 @@ RUN apt update && apt install -y --no-install-recommends \
   && apt install -y xdg-utils graphviz \
   && rm -rf /var/lib/apt/lists/*
 
-
+COPY --chown=$MAMBA_USER:$MAMBA_USER main_logo.png /temp/main_logo.png
+RUN cp /temp/main_logo.png $(find front -name main_logo**)
 # Set time Europe/Madrid
 
 RUN micromamba -n aspire install tzdata -c conda-forge && micromamba clean --all --yes \
@@ -22,9 +23,10 @@ COPY --chown=$MAMBA_USER:$MAMBA_USER env_project.yaml /tmp/env_project.yaml
 
 # Installing dependencies
 RUN micromamba install -y -n aspire -f /tmp/env_project.yaml \
-    && micromamba run -n aspire Rscript -e 'remotes::install_github("rstudio/tensorflow")' \
+    #&& micromamba run -n aspire Rscript -e 'remotes::install_github("rstudio/tensorflow")' \
     && micromamba run -n aspire Rscript -e 'remotes::install_github("bupaverse/processpredictR")' \
     && micromamba run -n aspire Rscript -e 'remotes::install_github("bupaverse/bupaverse")' \
+    && micromamba run -n aspire Rscript -e "remotes::install_github('gadenbuie/epoxy')" \
     #&& micromamba run -n aspire pip install pm4py \
     && micromamba run -n aspire pip cache purge \
     && micromamba clean --all --yes \
