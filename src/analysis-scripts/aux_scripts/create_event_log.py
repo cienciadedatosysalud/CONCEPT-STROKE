@@ -24,7 +24,7 @@ def import_data_and_convert_to_event_log(data_path):
     df.replace({False: 0, True: 1}, inplace = True)
 
     df_all = df
-    df = df.loc[:,df.columns.str.contains('patient_id|_dt') & ~df.columns.str.contains('prescription|exitus')]
+    df = df.loc[:,df.columns.str.contains('patient_id|_dt') & ~df.columns.str.contains('prescription|exitus|barthel|date_first_readmissions_30days_all_cause_dt')]
     df = pd.melt(df, id_vars='patient_id')
     # Sort df by time
     df.sort_values(['patient_id', 'value'], ascending=[False, True],inplace=True)
@@ -45,13 +45,18 @@ def import_data_and_convert_to_event_log(data_path):
     result = result.merge(unique_traces, on='trace', how='left')
     unique_traces = unique_traces.sort_values('freq_trace', ascending=False)
     unique_traces['index_trace'] = np.arange(len(unique_traces)) + 1
-
-    fig=unique_traces.plot(kind='bar',x = 'index_trace', y = 'freq_trace', figsize=(45, 20), fontsize=20).get_figure()
+    unique_traces['cumsum'] = np.cumsum(unique_traces['freq_trace'])
+    unique_traces['perc'] = unique_traces['cumsum']/sum(unique_traces['freq_trace'])
+    
+    unique_traces_ = unique_traces[unique_traces['perc'] <= 0.9]
+    
+    
+    fig=unique_traces_.plot(kind='bar',x = 'index_trace', y = 'freq_trace', figsize=(45, 20), fontsize=20).get_figure()
     plt.xlabel('Index trace', fontsize = 24)
     plt.ylabel('Frequency', fontsize = 24)
     plt.title('Barplot unique traces', fontsize = 28)
     #plt.rc('axes', titlesize=8)  # fontsize of the axes title
-    plt.xticks(np.arange(0, len(unique_traces), 4), fontsize=20,rotation=90)
+    plt.xticks(np.arange(0, len(unique_traces_), 4), fontsize=20,rotation=90)
     plt.savefig('../../outputs/barplot_unique_traces.png')
     plt.close()
     df['registration_type'] = 'completed'
@@ -65,8 +70,8 @@ def import_data_and_convert_to_event_log(data_path):
     activity_instance BIGINT)''')
     con.sql("INSERT INTO event_log SELECT * from df")
     con.close()
-    unique_traces['cumsum'] = np.cumsum(unique_traces['freq_trace'])
-    unique_traces['perc'] = unique_traces['cumsum']/sum(unique_traces['freq_trace'])
+    
+    
     return df, result, unique_traces, df_all
 
 
