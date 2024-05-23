@@ -22,12 +22,13 @@ def df_model_estimation_outcomes(data_path, df, event_log, traces, freq_traces, 
     result['dur_trace'] = (result['max']-result['min'])/ np.timedelta64(1, 'D')
     result.rename(columns={'case:concept:name': 'patient_id'},inplace=True)
     df = df.merge(result[['patient_id','dur_trace']], on=['patient_id'], how='left')
-    df_ = df[['patient_id', 'trace','freq_trace','rank_trace', 'jaccard_similarity', 'dur_trace','perc']]
+    df_ = df[['patient_id','patient_id_st' ,'trace','freq_trace','rank_trace', 'jaccard_similarity', 'dur_trace','perc']]
     traces_ = traces[['patient_id', 'trace', 'freq_trace','perc']]
     con = duckdb.connect(data_path)
 
     con.sql('''CREATE OR REPLACE TABLE prediction_outcomes_db(
     patient_id VARCHAR,
+    patient_id_st VARCHAR,
     trace VARCHAR,
     freq_trace VARCHAR,
     rank_trace VARCHAR,

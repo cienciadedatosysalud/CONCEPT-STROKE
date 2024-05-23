@@ -184,7 +184,7 @@ A COX model is built with the survival object (time = survival time; status = 1 
 
 - Categorical: intervention, sex, CT inhospital, MRI inhospital, rank trace, holidays, weekend, weekday, prescriptions and comorbidities,
 
-- Numerical: age, jaccard similarity measure, duration trace, period, number of admission prior emergency, number of admission prior inhospital.
+- Numerical: age, jaccard similarity measure, duration trace, length of stay in hospital, period, number of admission prior emergency, number of admission prior inhospital.
 :::
 ::: {.callout-tip}
 The model may not contain all of these variables if the input data for any of them contains 20% or more of missings.
@@ -227,24 +227,34 @@ con = dbConnect(duckdb::duckdb(), dbdir=params$data_path, read_only=FALSE)
 
 descriptive_values <- dbGetQuery(conn = con, "
 SELECT first (ccaa_cd) filter (where ccaa_cd IS NOT NULL) as ccaa_cd,
-median(age_nm) as median_age, 
+median(age_nm) as median_age,
+COUNT(*) as n_episodes,
 (QUANTILE_CONT(age_nm, 0.75)-QUANTILE_CONT(age_nm, 0.25)) as iqr_age,
 count(distinct patient_id) filter (where sex_cd = '1') as men,
 count(distinct patient_id) filter (where sex_cd = '2') as women,
 count(distinct patient_id) as n_patient_distinct,
-count(distinct patient_id) filter (where inhospital_fibrinolysis_bl = TRUE OR thrombolysis_emergency_dt is NOT NULL) as n_patient_with_fibrinolysis,
-count(distinct patient_id) filter (where inhospital_fibrinolysis_bl = TRUE) as n_patient_with_thrombectomy,
+count(*) filter (where type_ischemic_stroke_bl = TRUE) as n_episodes_with_ischemic_stroke,
+count(*) filter (where inhospital_fibrinolysis_bl = TRUE OR thrombolysis_emergency_dt is NOT NULL) as n_episodes_with_fibrinolysis,
+count(*) filter (where inhospital_thrombectomy_bl = TRUE) as n_episodes_with_thrombectomy,
 count(distinct patient_id) filter (where exitus_dt is NOT NULL) as n_patient_exitus,
 FROM main.patient")
 
 descriptive_values <- descriptive_values %>% mutate(
+  perc_ischemic = round((n_episodes_with_ischemic_stroke/n_episodes)*100,2),
+  united_ischemic =paste0(n_episodes_with_ischemic_stroke, ' (',perc_ischemic,'%)' ),
+  perc_fibrinolysis = round((n_episodes_with_fibrinolysis/n_episodes)*100,2),
+  united_fibrinolysis =paste0(n_episodes_with_fibrinolysis, ' (',perc_fibrinolysis,'%)' ),
+  perc_thrombectomy = round((n_episodes_with_thrombectomy/n_episodes)*100,2),
+  united_thrombectomy =paste0(n_episodes_with_thrombectomy, ' (',perc_thrombectomy,'%)' ),
+  perc_exitus = round((n_patient_exitus/n_patient_distinct)*100,2),
+  united_exitus =paste0(n_patient_exitus, ' (',perc_exitus,'%)' ),
   perc_men = round((men/n_patient_distinct)*100,2),
   united_men =paste0(men, ' (',perc_men,'%)' ),
   perc_women = round((women/n_patient_distinct)*100,2),
   united_women =paste0(women, ' (',perc_women,'%)' )
 )
 
-descriptive_values <- descriptive_values %>% select(!c(men,women,perc_men,perc_women))
+#descriptive_values <- descriptive_values %>% select(!c(men,women,perc_men,perc_women))
 write.table(descriptive_values, '../../outputs/table_descriptive_values.csv',sep='|',row.names = FALSE)
 
 
@@ -286,7 +296,10 @@ dbDisconnect(con, shutdown=TRUE)
 ```{r, echo=FALSE,warning=FALSE}
 #| label: descriptive tables inputs1
 
-descriptive_values_ <- melt(descriptive_values,id=NULL) 
+descriptive_values_ <- descriptive_values %>% dplyr::select(ccaa_cd,median_age,iqr_age,n_episodes,n_patient_distinct,
+                                                            united_men,united_women,united_fibrinolysis,united_thrombectomy,
+                                                            united_exitus,united_ischemic)
+descriptive_values_ <- melt(descriptive_values_,id=NULL) 
 
 comorbidities_ <- comorbidities_ %>% arrange(variable) %>% dplyr::select(variable,united_comorbidities) %>% 
   mutate(descrp = case_when(
@@ -300,12 +313,14 @@ descriptive_values_$variable <- as.character(descriptive_values_$variable)
 descriptive_values_$variable[descriptive_values_$variable %in% 'ccaa_cd'] <- 'CCAA'
 descriptive_values_$variable[descriptive_values_$variable %in% 'median_age'] <- 'Median age'
 descriptive_values_$variable[descriptive_values_$variable %in% 'iqr_age'] <- 'IQR age'
+descriptive_values_$variable[descriptive_values_$variable %in% 'n_episodes'] <- 'N episodes'
 descriptive_values_$variable[descriptive_values_$variable %in% 'n_patient_distinct'] <- 'N patients (unique)'
-descriptive_values_$variable[descriptive_values_$variable %in% 'n_patient_with_fibrinolysis'] <- 'N patients (unique) with fibrinolysis'
-descriptive_values_$variable[descriptive_values_$variable %in% 'n_patient_with_thrombectomy'] <- 'N patients (unique) with thrombectomy'
-descriptive_values_$variable[descriptive_values_$variable %in% 'n_patient_exitus'] <- 'N patient with exitus (unique) date (death)'
 descriptive_values_$variable[descriptive_values_$variable %in% 'united_men'] <- 'N Men (%)'
 descriptive_values_$variable[descriptive_values_$variable %in% 'united_women'] <- 'N Women (%)'
+descriptive_values_$variable[descriptive_values_$variable %in% 'united_ischemic'] <- 'N episodes with ischemic stroke'
+descriptive_values_$variable[descriptive_values_$variable %in% 'united_fibrinolysis'] <- 'N episodes with fibrinolysis'
+descriptive_values_$variable[descriptive_values_$variable %in% 'united_thrombectomy'] <- 'N episodes with thrombectomy'
+descriptive_values_$variable[descriptive_values_$variable %in% 'united_exitus'] <- 'N patient with exitus (unique) date (death)'
 
 
 table <- descriptive_values_ %>% gt(rowname_col = 'variable') %>% 
@@ -381,7 +396,7 @@ descriptive_traces <- dbGetQuery(conn = con, 'SELECT * FROM main.event_log')
 dbDisconnect(con, shutdown=TRUE)
 
 descriptive_traces_ <- descriptive_traces %>% group_by(`case:concept:name`) %>% 
-  mutate(dur_trace = as.numeric(max(`time:timestamp`,na.rm=TRUE) - min(`time:timestamp`,na.rm=TRUE)),
+  summarise(dur_trace = as.numeric(max(`time:timestamp`,na.rm=TRUE) - min(`time:timestamp`,na.rm=TRUE)),
          trace = paste(`concept:name`,collapse=', '),
          n_activities = n())
 
@@ -523,7 +538,12 @@ rm(init,trace_theory_df,p)
 
 Below is a comparison of the 10 most frequent traces with the theoretical one, using Jaccard's similarity method without regard to order:
 
-```{r, echo = FALSE, warning = FALSE}
+::: {.callout-tip}
+These traces correspond to those shown in @fig-survival_descriptive. Thus, **Trace: 1** corresponds to **trace 1** in the referenced figure. The number (identifier) of the trace corresponds to the position it occupies in a ranking of the most frequent traces, so that **Trace: 1** is the most frequent.
+:::
+
+
+```{r, echo = FALSE, warning = FALSE,fig.cap="Jaccard's similarity for the 10 most frequent traces"}
 #| label: jaccard similarity 10mostfrequent
 con = dbConnect(duckdb::duckdb(), dbdir=params$data_path, read_only=FALSE)
 
@@ -542,6 +562,20 @@ df <- dbGetQuery(conn = con, 'with seleccion_top10 as (SELECT
 		rank_trace != \'otros\'
 		and rank_trace::int <= 10)
 select * from seleccion_top10 where "case:concept:name" in (select DISTINCT on(rank_trace) "case:concept:name" from seleccion_top10)')
+
+df <- dbGetQuery(conn = con, 'with seleccion_top10 as (SELECT
+		*
+	FROM
+		(
+		SELECT
+			a.*,
+			b.*
+		FROM
+			main.event_log a
+		LEFT JOIN main.prediction_outcomes_db b ON
+			a."case:concept:name" = b.patient_id) a)
+select * from seleccion_top10')
+
 dbDisconnect(con, shutdown=TRUE)
 
 
@@ -561,12 +595,15 @@ p <- eventlog(df, case_id='patient_id',
 
 p$activity <- gsub('_',' ',p$activity)
 
-plot <- p %>%
-    trace_explorer(n_traces = 10, plotly = FALSE,coverage_labels = c('cumulative'),label_size = 0)
+p$rank_trace <- as.numeric(p$rank_trace)
+
+plot <- p[order(p$rank_trace),] %>% 
+    trace_explorer(n_traces = 10, plotly = FALSE,coverage_labels = c('cumulative'),show_labels = FALSE)
 
 plot[["data"]][["facets_cum"]] <- round(plot[["data"]][["jaccard_similarity"]],5)
 
 plot + labs(title='Jaccard similarity measured (10 most frequent traces)') + 
+  geom_text(aes(x=1,label=paste0('Trace: ',rank_trace.y)), vjust=0) +
   theme(title = element_text(size = 10))
 rm(df,p,plot)
 
@@ -695,39 +732,6 @@ The model's evaluation is:
 
 #source('aux_scripts/prediction_next_activity.R')
 
-train_test_df_function <- function(df,perc_train_set){
-  data_set_interv <- df %>% filter(intervention_bl %in% 1)
-  data_set_interv <- prepare_examples(data_set_interv, task = "next_activity",
-                                      features = c('hospital_cd', 'healthcare_area_cd', 
-                                                   'age_nm', 'sex_cd','ct_inhospital_bl', 'mri_inhospital_bl','type_admission_cd','antiarrhythmics_prescription_bl',
-                                                   'antihypertensive_prescription_bl', 'antiaggregants_prescription_bl','fibrinolitics_prescriptions_bl',                                    'heart_failure_bl','hypertension_bl','diabetes_bl','atrial_fibrillation_bl','valvular_disease_bl'))
-  
-  data_set_nointerv <- df %>% filter(intervention_bl %in% 0)
-  data_set_nointerv <- prepare_examples(data_set_nointerv, task = "next_activity",
-                                        features = c('hospital_cd', 'healthcare_area_cd', 
-                                                     'age_nm', 'sex_cd','ct_inhospital_bl', 'mri_inhospital_bl','type_admission_cd','antiarrhythmics_prescription_bl',
-                                                     'antihypertensive_prescription_bl', 'antiaggregants_prescription_bl','fibrinolitics_prescriptions_bl',                                    'heart_failure_bl','hypertension_bl','diabetes_bl','atrial_fibrillation_bl','valvular_disease_bl'))
-  
-  if(length(unique(data_set_interv$patient_id))>=(length(unique(data_set_nointerv$patient_id)))){
-    split_nointerv <- data_set_nointerv %>% split_train_test(split = perc_train_set)
-    train_df_nointerv <- split_nointerv$train_df
-    patient_id_ <- data_set_interv[!duplicated(data_set_interv$patient_id),] 
-    patient_id_ <- sample(patient_id_$patient_id, length(unique(train_df_nointerv$patient_id)))
-    train_df_interv <- data_set_interv %>% filter(patient_id %in% patient_id_)
-  }else{
-    split_interv <- data_set_interv %>% split_train_test(split = perc_train_set)
-    train_df_interv <- split_interv$train_df
-    patient_id_ <- data_set_nointerv[!duplicated(data_set_nointerv$patient_id),] 
-    patient_id_ <- sample(patient_id_$patient_id, length(unique(train_df_interv$patient_id)))
-    train_df_nointerv <- data_set_nointerv %>% filter(patient_id %in% patient_id_)
-  }
-  test_df_interv <- data_set_interv %>% filter(patient_id %nin% train_df_interv$patient_id)
-  test_df_nointerv <- data_set_nointerv %>% filter(patient_id %nin% train_df_nointerv$patient_id)
-  test_df <- rbind(test_df_interv, test_df_nointerv)
-  train_df <- rbind(train_df_nointerv,train_df_interv)
-  list_df <- list(train=train_df,test=test_df)
-  return(list_df)
-}
 compare_predict_observ <- function(predictions){
   compare_predictions <- predictions %>% group_by(patient_id) %>% 
     summarise(
@@ -760,7 +764,7 @@ predict_next_activity_function <- function(database_path,n_epochs_fit){
   df <- dbGetQuery(conn = con, 'SELECT a.*,b.* FROM main.event_log a LEFT JOIN main.patient_view b ON a."case:concept:name" = b.patient_id')
   
   dbDisconnect(con, shutdown=TRUE)
-  
+
   
   df <- df %>% rename(activity = `concept:name`, timestamp = `time:timestamp`) %>% 
     select(!ends_with("_dt"))
@@ -780,7 +784,6 @@ predict_next_activity_function <- function(database_path,n_epochs_fit){
   df$intervention_bl[df$intervention %in% 'thrombectomy_mec'] <- 1
   df$intervention_bl[df$intervention %in% 'combined'] <- 1
   
-  
   #### bupar
   
   p <- eventlog(df, case_id='patient_id',
@@ -789,23 +792,67 @@ predict_next_activity_function <- function(database_path,n_epochs_fit){
                 timestamp = 'timestamp',
                 lifecycle_id = 'registration_type',
                 resource_id = 'resource_id')
-  # Intervention bl remove in train_test_df_function() to not include in model
   
-  
-  #### MODEL ####
-  
+  # Intervention bl remove to not include in model
   set.seed(1234)
-  
   perc_train_set <- 0.7
+    
+  data_set_interv <- p %>% filter(intervention_bl %in% 1)
+    
+  data_set_nointerv <- p %>% filter(intervention_bl %in% 0)
+    
+  if(length(unique(data_set_interv$patient_id))>=(length(unique(data_set_nointerv$patient_id)))){
+      set.seed(1234)
+      size_df <- length(unique(data_set_nointerv$patient_id))
+      size_sample <- floor(0.7 * size_df)
+      patient_id_nointerv <- data_set_nointerv[!duplicated(data_set_nointerv$patient_id),]
+      patient_id_nointerv <- sample(patient_id_nointerv$patient_id, size_sample,replace = FALSE)
+      train_df_nointerv <- data_set_nointerv %>% filter(patient_id %in% patient_id_nointerv)
+      patient_id_ <- data_set_interv[!duplicated(data_set_interv$patient_id),] 
+      patient_id_ <- sample(patient_id_$patient_id, length(unique(train_df_nointerv$patient_id)))
+      train_df_interv <- data_set_interv %>% filter(patient_id %in% patient_id_)
+    }else{
+      set.seed(1234)
+      size_df <- length(unique(data_set_interv$patient_id))
+      size_sample <- floor(0.7 * size_df)
+      patient_id_interv <- data_set_interv[!duplicated(data_set_interv$patient_id),]
+      patient_id_interv <- sample(patient_id_interv$patient_id, size_sample,replace = FALSE)
+      train_df_interv <- data_set_interv %>% filter(patient_id %in% patient_id_interv)
+      patient_id_ <- data_set_nointerv[!duplicated(data_set_nointerv$patient_id),] 
+      patient_id_ <- sample(patient_id_$patient_id, length(unique(train_df_interv$patient_id)),replace=FALSE)
+      train_df_nointerv <- data_set_nointerv %>% filter(patient_id %in% patient_id_)
+    }
+  test_df_interv <- data_set_interv %>% filter(patient_id %nin% train_df_interv$patient_id)
+  test_df_nointerv <- data_set_nointerv %>% filter(patient_id %nin% train_df_nointerv$patient_id)
+  test_df <- rbind(test_df_interv,test_df_nointerv)
+  train_df <- rbind(train_df_nointerv,train_df_interv)
+  rm(test_df_interv, test_df_nointerv,train_df_nointerv,train_df_interv)
   
-  train_test_df <- train_test_df_function(p,perc_train_set)
+  train_df <- prepare_examples(train_df, task = "next_activity",
+                                      features = c('hospital_cd', 'healthcare_area_cd',
+                                                   'age_nm', 'sex_cd','ct_inhospital_bl',
+                                    'mri_inhospital_bl','type_admission_cd',
+                                    'antiarrhythmics_prescription_bl','antihypertensive_prescription_bl',
+                                    'antiaggregants_prescription_bl','fibrinolitics_prescriptions_bl',
+                                    'heart_failure_bl','hypertension_bl','diabetes_bl',
+                                    'atrial_fibrillation_bl','valvular_disease_bl'))
+  test_df <- prepare_examples(test_df, task = "next_activity",
+                                      features = c('hospital_cd', 'healthcare_area_cd',
+                                                   'age_nm', 'sex_cd','ct_inhospital_bl',
+                                    'mri_inhospital_bl','type_admission_cd',
+                                    'antiarrhythmics_prescription_bl','antihypertensive_prescription_bl',
+                                    'antiaggregants_prescription_bl','fibrinolitics_prescriptions_bl',
+                                    'heart_failure_bl','hypertension_bl','diabetes_bl',
+                                    'atrial_fibrillation_bl','valvular_disease_bl'))
   
-  model <- train_test_df$train %>% create_model(name = "my_model") 
+
+  model <- train_df %>% create_model(name = "my_model")
   model %>% compile()
+  
   # default loss function: log-cosh or the categorical cross entropy, for regression tasks 
   #(next time and remaining time) and classification tasks, respectively.
   
-  hist <- fit(object = model, train_data = train_test_df$train, epochs = n_epochs_fit,callbacks = NULL)
+  hist <- fit(object = model, train_data = train_df, epochs = n_epochs_fit,callbacks = NULL)
   y_df <- data.frame(y_train = hist$metrics$sparse_categorical_accuracy,
                      y_val = hist$metrics$val_sparse_categorical_accuracy)
   y_df$epochs <- 1:nrow(y_df)
@@ -823,9 +870,9 @@ predict_next_activity_function <- function(database_path,n_epochs_fit){
     layout(title = list(text = paste0('Performance model',
                                       '<br>',
                                       '<sup>')), legend = list(orientation = "h"))
-  eval <- model %>% evaluate(train_test_df$test)
+  eval <- model %>% evaluate(test_df)
   eval <- round(eval,2)
-  predictions <- model %>% predict(test_data = train_test_df$test, 
+  predictions <- model %>% predict(test_data = test_df, 
                                    output = "append") # default
   
   compare_predictions <- compare_predict_observ(predictions)
@@ -897,7 +944,8 @@ df <- dbGetQuery(conn = con, "SELECT a.* FROM main.patient_view a ")
 df_ <- dbGetQuery(conn = con, "SELECT DISTINCT patient_id,trace,freq_trace,rank_trace,jaccard_similarity,dur_trace,perc FROM main.prediction_outcomes_db")
 df_ <- df_[!duplicated(df_),]
 df <- left_join(x=df,y=df_, by='patient_id')
-df1 <- dbGetQuery(conn = con, "with number_comorbidities as (
+df1 <- dbGetQuery(conn = con, "
+                  with number_comorbidities as (
 SELECT
 	patient_id,
 	list_aggregate([heart_failure_bl::int,
@@ -905,13 +953,27 @@ SELECT
 	diabetes_bl::int,
 	atrial_fibrillation_bl::int,
 	valvular_disease_bl::int],
-	'sum') as sum_comorbidities
+	'sum') as sum_comorbidities,
+	CASE
+		WHEN hospital_admission_date_dt IS NOT NULL THEN DATEDIFF('day',
+		hospital_admission_date_dt,
+		hospital_discharge_date_dt)
+		ELSE 0
+	END AS los_hospital,
+	CASE
+		WHEN admission_to_observation_ward_dt IS NOT NULL THEN DATEDIFF('day',
+		admission_to_observation_ward_dt,
+		discharge_from_emergency_dt)
+		ELSE 0
+	END AS los_observation_discharge_emergency
 from
-	main.patient),
+	main.patient_view),
 traces_info as (
 select
 	a.*,
-	b.sum_comorbidities
+	b.sum_comorbidities,
+	b.los_hospital,
+	b.los_observation_discharge_emergency
 from
 	(
 	SELECT
@@ -932,16 +994,40 @@ select
 	freq_trace,
 	rank_trace,
 	jaccard_similarity,
-	round(avg(dur_trace),2) as mean_dur_trace_days,
-	round(stddev(dur_trace),2) as std_dur_trace_days,
-	round(median(dur_trace),2) as median_dur_trace_days,
+	round(avg(dur_trace),
+	2) as mean_dur_trace_days,
+	round(stddev(dur_trace),
+	2) as std_dur_trace_days,
+	round(median(dur_trace),
+	2) as median_dur_trace_days,
 	round((QUANTILE_CONT(dur_trace,
 	0.75)-QUANTILE_CONT(dur_trace,
-	0.25)),2) as iqr_dur_trace_days,
+	0.25)),
+	2) as iqr_dur_trace_days,
 	count(*) FILTER (sum_comorbidities = 0) AS n_patient_0_comorb,
 	count(*) FILTER (sum_comorbidities = 1
 		or sum_comorbidities = 2) AS n_patient_1_2_comorb,
 	count(*) FILTER (sum_comorbidities > 2) AS n_patient_morethan_2_comorb,
+	round(avg(los_hospital),
+	2) as mean_los_hospital_days,
+	round(stddev(los_hospital),
+	2) as std_los_hospital_days,
+	round(median(los_hospital),
+	2) as median_los_hospital_days,
+	round((QUANTILE_CONT(los_hospital,
+	0.75)-QUANTILE_CONT(los_hospital,
+	0.25)),
+	2) as iqr_los_hospital_days,
+	round(avg(los_observation_discharge_emergency),
+	2) as mean_los_observation_discharge_emergency_days,
+	round(stddev(los_observation_discharge_emergency),
+	2) as std_los_observation_discharge_emergency_days,
+	round(median(los_observation_discharge_emergency),
+	2) as median_los_observation_discharge_emergency_days,
+	round((QUANTILE_CONT(los_observation_discharge_emergency,
+	0.75)-QUANTILE_CONT(los_observation_discharge_emergency,
+	0.25)),
+	2) as iqr_los_observation_discharge_emergency_days,
 from
 	traces_info
 group by
@@ -954,9 +1040,9 @@ rm(df_,df1)
 
 dbDisconnect(con, shutdown=TRUE)
 
-#df <- read.csv(file = '../../outputs/df_gam.csv', sep = '|')
+
 df <- df %>% mutate_if(is.logical, as.numeric)
-df_ <- df[!duplicated(df$patient_id),]
+#df_ <- df[!duplicated(df$patient_id),]
 
 
 df1 <- df %>% mutate(
@@ -1080,7 +1166,12 @@ A summary (table with all variables and a ggforest with only variables that are 
 ```{r, echo = FALSE, warning=FALSE}
 #| label: prediction outcomes cox model
 
-df_model$sex_cd <- as.character(df_model$sex_cd)
+# df_model$sex_cd <- as.character(df_model$sex_cd)
+#  df_model$sex_cd[df_model$sex_cd %in% '1'] <- 'Male'
+#  df_model$sex_cd[df_model$sex_cd %in% '2'] <- 'Female'
+# df_model$sex_cd <- factor(df_model$sex_cd,
+# levels = c(0,1,2,9),
+# labels = c("unknown", "male", "female",'not_applicable')) 
 #df_model$zip_code_cd <- as.character(df_model$zip_code_cd)
 df_model$hospital_type_discharge_cd <- as.character(df_model$hospital_type_discharge_cd)
 
@@ -1324,20 +1415,22 @@ tryCatch(
 
 ```
 
-```{r, echo = FALSE, warning=FALSE,fig.width=10,fig.height=8}
-
-tryCatch(
-  {
-  performance::check_model(propensity_model_fibri)
-  },
-  error=function(cond) {
-    print(paste0("error building check plot model: propension to fibrinolisys intervention"))
-    log_error(paste0(cond))
-  }
-)
 
 
-```
+<!-- ```{r, echo = FALSE, warning=FALSE,fig.width=10,fig.height=8} -->
+
+<!-- tryCatch( -->
+<!--   { -->
+<!--   performance::check_model(propensity_model_fibri) -->
+<!--   }, -->
+<!--   error=function(cond) { -->
+<!--     print(paste0("error building check plot model: propension to fibrinolisys intervention")) -->
+<!--     log_error(paste0(cond)) -->
+<!--   } -->
+<!-- ) -->
+
+
+<!-- ``` -->
 
 
 
@@ -1415,20 +1508,21 @@ tryCatch(
 ```
 
 
-```{r, echo = FALSE, warning=FALSE,fig.width=10,fig.height=8}
 
-tryCatch(
-  {
-  performance::check_model(propensity_model_throm_mec)
-  },
-  error=function(cond) {
-    print(paste0("error building check plot model: propension to thrombectomy mechanic intervention"))
-    log_error(paste0(cond))
-  }
-)
+<!-- ```{r, echo = FALSE, warning=FALSE,fig.width=10,fig.height=8} -->
+
+<!-- tryCatch( -->
+<!--   { -->
+<!--   performance::check_model(propensity_model_throm_mec) -->
+<!--   }, -->
+<!--   error=function(cond) { -->
+<!--     print(paste0("error building check plot model: propension to thrombectomy mechanic intervention")) -->
+<!--     log_error(paste0(cond)) -->
+<!--   } -->
+<!-- ) -->
 
 
-```
+<!-- ``` -->
 
 
 
@@ -1506,20 +1600,21 @@ tryCatch(
 ```
 
 
-```{r, echo = FALSE, warning=FALSE,fig.width=10,fig.height=8}
 
-tryCatch(
-  {
-  performance::check_model(propensity_model_combined)
-  },
-  error=function(cond) {
-    print(paste0("error building check plot model: propension to combined intervention"))
-    log_error(paste0(cond))
-  }
-)
+<!-- ```{r, echo = FALSE, warning=FALSE,fig.width=10,fig.height=8} -->
+
+<!-- tryCatch( -->
+<!--   { -->
+<!--   performance::check_model(propensity_model_combined) -->
+<!--   }, -->
+<!--   error=function(cond) { -->
+<!--     print(paste0("error building check plot model: propension to combined intervention")) -->
+<!--     log_error(paste0(cond)) -->
+<!--   } -->
+<!-- ) -->
 
 
-```
+<!-- ``` -->
 
 
 
@@ -1608,20 +1703,22 @@ tryCatch(
 
 ```
 
-```{r, echo = FALSE, warning=FALSE,fig.width=10,fig.height=8}
-
-tryCatch(
-  {
-  performance::check_model(model_fibrinolysis)
-  },
-  error=function(cond) {
-    print(paste0("error building check plot model: propensity score fibrinolysis as covariable"))
-    log_error(paste0(cond))
-  }
-)
 
 
-```
+<!-- ```{r, echo = FALSE, warning=FALSE,fig.width=10,fig.height=8} -->
+
+<!-- tryCatch( -->
+<!--   { -->
+<!--   performance::check_model(model_fibrinolysis) -->
+<!--   }, -->
+<!--   error=function(cond) { -->
+<!--     print(paste0("error building check plot model: propensity score fibrinolysis as covariable")) -->
+<!--     log_error(paste0(cond)) -->
+<!--   } -->
+<!-- ) -->
+
+
+<!-- ``` -->
 
 
 
@@ -1666,20 +1763,21 @@ tryCatch(
 ```
 
 
-```{r, echo = FALSE, warning=FALSE,fig.width=10,fig.height=8}
 
-tryCatch(
-  {
-  performance::check_model(model_thrombectomy_mec)
-  },
-  error=function(cond) {
-    print(paste0("error building check plot model: propensity score thrombectomy mechanic as covariable"))
-    log_error(paste0(cond))
-  }
-)
+<!-- ```{r, echo = FALSE, warning=FALSE,fig.width=10,fig.height=8} -->
+
+<!-- tryCatch( -->
+<!--   { -->
+<!--   performance::check_model(model_thrombectomy_mec) -->
+<!--   }, -->
+<!--   error=function(cond) { -->
+<!--     print(paste0("error building check plot model: propensity score thrombectomy mechanic as covariable")) -->
+<!--     log_error(paste0(cond)) -->
+<!--   } -->
+<!-- ) -->
 
 
-```
+<!-- ``` -->
 
 
 
@@ -1724,20 +1822,22 @@ tryCatch(
 
 ```
 
-```{r, echo = FALSE, warning=FALSE,fig.width=10,fig.height=8}
-
-tryCatch(
-  {
-  performance::check_model(model_combined)
-  },
-  error=function(cond) {
-    print(paste0("error building check plot model: propensity score combined as covariable"))
-    log_error(paste0(cond))
-  }
-)
 
 
-```
+<!-- ```{r, echo = FALSE, warning=FALSE,fig.width=10,fig.height=8} -->
+
+<!-- tryCatch( -->
+<!--   { -->
+<!--   performance::check_model(model_combined) -->
+<!--   }, -->
+<!--   error=function(cond) { -->
+<!--     print(paste0("error building check plot model: propensity score combined as covariable")) -->
+<!--     log_error(paste0(cond)) -->
+<!--   } -->
+<!-- ) -->
+
+
+<!-- ``` -->
 
 
 
@@ -1788,20 +1888,22 @@ tryCatch(
 
 ```
 
-```{r, echo = FALSE, warning=FALSE,fig.width=10,fig.height=8}
-
-tryCatch(
-  {
-  performance::check_model(model_all)
-  },
-  error=function(cond) {
-    print(paste0("error building check plot model: final model (all propensity score as covariable)"))
-    log_error(paste0(cond))
-  }
-)
 
 
-```
+<!-- ```{r, echo = FALSE, warning=FALSE,fig.width=10,fig.height=8} -->
+
+<!-- tryCatch( -->
+<!--   { -->
+<!--   performance::check_model(model_all) -->
+<!--   }, -->
+<!--   error=function(cond) { -->
+<!--     print(paste0("error building check plot model: final model (all propensity score as covariable)")) -->
+<!--     log_error(paste0(cond)) -->
+<!--   } -->
+<!-- ) -->
+
+
+<!-- ``` -->
 
 
 
