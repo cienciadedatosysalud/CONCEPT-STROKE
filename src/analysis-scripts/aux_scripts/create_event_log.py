@@ -8,23 +8,93 @@ from pm4py.objects.conversion.log import converter as log_converter
 def import_data_and_convert_to_event_log(data_path):
     con = duckdb.connect(data_path)
     con.sql('''CREATE OR REPLACE VIEW patient_view AS 
-    SELECT *, CASE 
-        WHEN inhospital_thrombectomy_bl = TRUE THEN hospital_intervention_date_dt
-    END as inhospital_thrombectomy_bl_date_dt,
-    CASE 
-        WHEN inhospital_fibrinolysis_bl = TRUE THEN hospital_intervention_date_dt
-    END as inhospital_fibrinolysis_bl_date_dt,
-    CASE 
-        WHEN thrombolysis_emergency_dt is NULL THEN 0 ELSE 1
-    END as thrombolysis_emergency_bl
-    FROM main.patient ''')
+    SELECT
+	patient_id as patient_id_st,
+	CAST(ROW_NUMBER () over() AS VARCHAR) as patient_id,
+	hospital_cd,
+	hospital_st,
+	ccaa_cd,
+	healthcare_area_cd,
+	age_nm,
+	sex_cd,
+	municipality_code_cd,
+	zip_code_cd,
+	type_admission_cd,
+	hospital_admission_date_dt,
+	hospital_intervention_date_dt,
+	hospital_discharge_date_dt,
+	hospital_type_discharge_cd,
+	inhospital_thrombectomy_bl,
+	inhospital_fibrinolysis_bl,
+	type_ischemic_stroke_bl,
+	socioeconomic_level_cd,
+	admission_emergency_care_dt,
+	triage_emergency_care_dt,
+	first_asisstance_medical_dt,
+	admission_to_observation_ward_dt,
+	internal_neurology_consultation_dt,
+	ct_mri_dt,
+	ct_inhospital_bl,
+	mri_inhospital_bl,
+	thrombolysis_emergency_dt,
+	discharge_from_emergency_dt,
+	discharge_emergency_bl,
+	exitus_dt,
+	n_admission_prior_emergency_nm,
+	n_admission_prior_inhospital_nm,
+	date_first_readmissions_30days_all_cause_dt,
+	readmissions_30days_bl,
+	anticoagulants_prescriptions_bl,
+	atc_code_anticoagulants_cd,
+	start_date_prescription_anticoagulants_dt,
+	end_date_prescription_anticoagulants_dt,
+	antiarrhythmics_prescription_bl,
+	atc_code_antiarrhythmic_cd,
+	start_date_prescription_antiarrhythmic_dt,
+	end_date_prescription_antiarrhythmic_dt,
+	antihypertensive_prescription_bl,
+	atc_code_antihypertensive_cd,
+	start_date_prescription_antihypertensive_dt,
+	end_date_prescription_antihypertensive_dt,
+	antiaggregants_prescription_bl,
+	atc_code_antiaggregants_cd,
+	start_date_prescription_antiaggregants_dt,
+	end_date_prescription_antiaggregants_dt,
+	fibrinolitics_prescriptions_bl,
+	atc_code_fibrinolitics_cd,
+	nihss_score_nm,
+	nihss_score_date_dt,
+	modified_rankin_scale_cd,
+	modified_rankin_scale_dt,
+	barthel_index_nm,
+	barthel_index_dt,
+	exitus_bl,
+	heart_failure_bl,
+	hypertension_bl,
+	diabetes_bl,
+	atrial_fibrillation_bl,
+	valvular_disease_bl,
+	hospital_icu_admission_bl,
+	hospital_icu_stay,
+	CASE
+		WHEN inhospital_thrombectomy_bl = TRUE THEN hospital_intervention_date_dt
+	END as inhospital_thrombectomy_bl_date_dt,
+	CASE
+		WHEN inhospital_fibrinolysis_bl = TRUE THEN hospital_intervention_date_dt
+	END as inhospital_fibrinolysis_bl_date_dt,
+	CASE
+		WHEN thrombolysis_emergency_dt is NULL THEN 0
+		ELSE 1
+	END as thrombolysis_emergency_bl
+FROM
+	main.patient''')
     df = con.sql("SELECT * FROM patient_view").df()
     ## TO use this columns in some models and decision mining
     df[['hospital_cd','healthcare_area_cd','socioeconomic_level_cd','modified_rankin_scale_cd']] = df[['hospital_cd','healthcare_area_cd','socioeconomic_level_cd','modified_rankin_scale_cd']].apply(lambda x: pd.to_numeric(x, errors = 'coerce'))
     df.replace({False: 0, True: 1}, inplace = True)
 
     df_all = df
-    df = df.loc[:,df.columns.str.contains('patient_id|_dt') & ~df.columns.str.contains('prescription|exitus|barthel|date_first_readmissions_30days_all_cause_dt')]
+    df = df.loc[:,df.columns.str.contains('patient_id|_dt') & ~df.columns.str.contains('patient_id_st|prescription|exitus|barthel|date_first_readmissions_30days_all_cause_dt')]
     df = pd.melt(df, id_vars='patient_id')
     # Sort df by time
     df.sort_values(['patient_id', 'value'], ascending=[False, True],inplace=True)
@@ -49,7 +119,8 @@ def import_data_and_convert_to_event_log(data_path):
     unique_traces['perc'] = unique_traces['cumsum']/sum(unique_traces['freq_trace'])
     
     unique_traces_ = unique_traces[unique_traces['perc'] <= 0.9]
-    
+    if len(unique_traces_) == 0:
+      unique_traces_ = unique_traces[unique_traces['index_trace'] == 1]
     
     fig=unique_traces_.plot(kind='bar',x = 'index_trace', y = 'freq_trace', figsize=(45, 20), fontsize=20).get_figure()
     plt.xlabel('Index trace', fontsize = 24)
@@ -91,25 +162,42 @@ def check_dates_hospital_emergency(data_path):
                   'discharge_from_emergency_dt',
                   'nihss_score_date_dt']
     df_emergency = df[emergency_care_admission_date]
-    df_emergency.dropna(inplace = True)
-    p = ((df_emergency.iloc[:,0:len(emergency_care_admission_date)].values >= df_emergency[['admission_emergency_care_dt']].values) & (df_emergency.iloc[:,
-          0:len(emergency_care_admission_date)].values <= df_emergency[['discharge_from_emergency_dt']].values)).all(axis=1)
-    print('There are', np.count_nonzero(p==False), 'errors in emergency dates, if there are errors they may be dates outside the limits or there may be dates without having entered the emergency')
+    df_emergency = df_emergency.dropna(subset=['admission_emergency_care_dt'])
+    
+    p = np.where(df_emergency.iloc[:, 0:len(emergency_care_admission_date)].notna(),
+    (df_emergency.iloc[:, 0:len(emergency_care_admission_date)].values >= df_emergency[['admission_emergency_care_dt']].values) &
+    (df_emergency.iloc[:, 0:len(emergency_care_admission_date)].values <= df_emergency[['discharge_from_emergency_dt']].values),
+    True)
+    p_all = p.all(axis=1)
+    errors_count = np.count_nonzero(p_all == False)
+    # p = ((df_emergency.iloc[:,0:len(emergency_care_admission_date)].notna()) & (df_emergency.iloc[:,0:len(emergency_care_admission_date)].values >= df_emergency[['admission_emergency_care_dt']].values) & (df_emergency.iloc[:,
+    #       0:len(emergency_care_admission_date)].values <= df_emergency[['discharge_from_emergency_dt']].values) & (df_emergency.iloc[:,0:len(emergency_care_admission_date)].values >= df_emergency[['admission_emergency_care_dt']].values)).all(axis=1)
+    print('There are', np.count_nonzero(p==False), 'errors in emergency dates, if there are errors they may be dates outside the limits (admission-discharge emergency)')
     # hospital
+
+
     hospital_admission_date = ['hospital_admission_date_dt',
                             'hospital_intervention_date_dt',
                             'hospital_discharge_date_dt',
                              'modified_rankin_scale_dt','inhospital_thrombectomy_bl_date_dt','inhospital_fibrinolysis_bl_date_dt']
     df_hospital = df[hospital_admission_date]
-    df_hospital.dropna(inplace = True)
-    p = ((df_hospital.iloc[:,0:len(hospital_admission_date)].values >= df_hospital[['hospital_admission_date_dt']].values) & (df_hospital.iloc[:,
-          0:len(hospital_admission_date)].values <= df_hospital[['hospital_discharge_date_dt']].values)).all(axis=1)
-    print('There are', np.count_nonzero(p==False), 'errors in hospital dates, if there are errors they may be dates outside the limits or there are dates without having entered the hospital')
+    df_hospital = df_hospital.dropna(subset=['hospital_admission_date_dt'])
+    
+    p = np.where(df_hospital.iloc[:, 0:len(hospital_admission_date)].notna(),
+    (df_hospital.iloc[:, 0:len(hospital_admission_date)].values >= df_hospital[['hospital_admission_date_dt']].values) &
+    (df_hospital.iloc[:, 0:len(hospital_admission_date)].values <= df_hospital[['hospital_discharge_date_dt']].values),
+    True)
+    p_all = p.all(axis=1)
+    errors_count = np.count_nonzero(p_all == False)
+    print('There are', np.count_nonzero(p==False), 'errors in hospital dates, if there are errors they may be dates outside the limits (admission-discharge hospital)')
+    
     df.dropna(inplace = True)
+    
     p = (df.loc[(df['hospital_admission_date_dt'] >= df['admission_emergency_care_dt']) & (df['hospital_admission_date_dt'] < df['discharge_from_emergency_dt'])])
     print('There are', len(p), 'errors in hospital dates with emergency dates, the hospital admission date is between the emergency admission and discharge date (included).')
 
 def filter_for_k_freq_traces(event_log, traces, freq_traces, df, k):
+    
 
     filtered_event_log = pm4py.filter_variants_top_k(event_log, k)
     traces_filtered = traces[traces['patient_id'].isin(filtered_event_log['case:concept:name'].unique())]
