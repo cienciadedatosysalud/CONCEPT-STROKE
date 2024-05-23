@@ -1228,6 +1228,20 @@ aux3 <- data.frame(var=str_extract(aux2$variables_model,str_c(aux1$variables_df,
 aux3 <- aux3 %>% filter(!is.na(var))
 
 aux3 <- unique(aux3$var)
+
+
+df_model_plot <- df_model %>% dplyr::select(intervention_bl,intervention, exitus_bl, hospital_cd , age_nm , sex_cd , zip_code_cd , hospital_type_discharge_cd , ct_inhospital_bl , mri_inhospital_bl , n_admission_prior_emergency_nm , n_admission_prior_inhospital_nm ,  antiarrhythmics_prescription_bl , antihypertensive_prescription_bl , antiaggregants_prescription_bl , fibrinolitics_prescriptions_bl ,  modified_rankin_scale_cd ,  heart_failure_bl , hypertension_bl , diabetes_bl , atrial_fibrillation_bl , valvular_disease_bl , rank_trace , jaccard_similarity , dur_trace , period , holiday_bl , weekend_bl , weekday,length_of_stay_hospital, exitus_1year_from_start_futimedt_bl)
+
+p_ <- as.data.frame(sum_model_surv$coefficients)
+p1_ <- p_ %>% filter(`Pr(>|z|)` <= 0.01)
+
+aux1_ <- data.frame(variables_df = colnames(df_model_plot))
+aux2_ <- data.frame(variables_model = rownames(p1_))
+aux3_ <- data.frame(var=str_extract(aux2_$variables_model,str_c(aux1_$variables_df,collapse = '|')))
+aux3_ <- aux3_ %>% filter(!is.na(var))
+
+aux3_ <- unique(aux3_$var)
+
 ```
 
 
@@ -1260,7 +1274,7 @@ tryCatch(
   {
 
 
-  forest_model(model_surv, covariates = aux3)
+  forest_model(model_surv, covariates = aux3_)
     
   },
   error=function(cond) {
@@ -1300,6 +1314,7 @@ cox.zph(model_surv)
 formula_model <- paste0(aux3,collapse = '+')
 df_model_ <- df_model_ %>% select(aux3,intervention_bl,exitus_1year_from_start_futimedt_bl,hospital_cd)
 rm(aux1,aux2,aux3,p,p1)
+rm(aux1_,aux2_,aux3_,p_,p1_,df_model_plot)
 #### Propension to intervention model
 
 
