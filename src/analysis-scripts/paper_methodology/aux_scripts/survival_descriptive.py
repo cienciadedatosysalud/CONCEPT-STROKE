@@ -1,0 +1,72 @@
+from lifelines import KaplanMeierFitter, CoxPHFitter
+import matplotlib.pyplot as plt
+import datetime
+import pandas as pd
+import numpy as np
+from lifelines.statistics import logrank_test
+
+def survival_analysis(df_filtered):
+    end_study = datetime.date(year=2022, month=12, day=31)
+    df_filtered['status'] = True
+    df_filtered.loc[df_filtered['exitus_dt'].isna(), 'status'] = False
+    df_filtered['start_futime'] = df_filtered[['hospital_admission_date_dt', 'admission_emergency_care_dt']].min(axis=1)
+    df_filtered['survival_in_days'] = (pd.to_datetime(end_study) - df_filtered[
+        'start_futime']) / np.timedelta64(1, 'D')
+    df_filtered.loc[df_filtered['exitus_dt'].notna(), 'survival_in_days'] = (df_filtered['exitus_dt'] - df_filtered[
+        'start_futime']) / np.timedelta64(1, 'D')
+    df_filtered.loc[(df_filtered['exitus_dt'].notna()) & (df_filtered['survival_in_days'] > 365), 'status'] = False
+    df_filtered = df_filtered.loc[df_filtered['survival_in_days'] >= 0]
+    max_value = df_filtered['survival_in_days'].max()
+    fig, ax = plt.subplots()
+    kmf = KaplanMeierFitter()
+    for value in df_filtered['rank_trace'].unique():
+        trace = df_filtered['rank_trace'] == value
+        kmf.fit(durations=df_filtered['survival_in_days'][trace], event_observed=df_filtered['status'][trace],
+                label='Rank_trace' + str(value))
+        kmf.plot_survival_function(
+            label=value,
+            ax=ax
+        )
+        ax.set(
+            title='Kaplan-Meier survival curves',
+            xlabel='Days',
+            ylabel='Estimated Probability of Survival'
+        )
+        plt.legend(loc='upper right')
+        plt.xlim(0, 365)
+    fig.savefig('../../../outputs/surv_analysis_KM_curves_descriptive.png')
+    fig.savefig('../../../outputs/surv_analysis_KM_curves_descriptive.tif')
+    plt.close()
+    
+    traces = df_filtered['rank_trace'].unique()
+    logrank_results = []
+    for i in range(len(traces)):
+        for j in range(i + 1, len(traces)):
+            trace1 = df_filtered['rank_trace'] == traces[i]
+            trace2 = df_filtered['rank_trace'] == traces[j]
+            result = logrank_test(df_filtered['survival_in_days'][trace1],
+                                 df_filtered['survival_in_days'][trace2],
+                                 event_observed_A=df_filtered['status'][trace1],
+                                 event_observed_B=df_filtered['status'][trace2])
+            logrank_results.append({
+                'Trace 1': traces[i],
+                'Trace 2': traces[j],
+                'Chi-squared': result.test_statistic,
+                'p-value': result.p_value,
+                'degrees of freedom': result.degrees_of_freedom
+            })
+    logrank_results_df = pd.DataFrame(logrank_results)
+    
+    df_filtered1 = df_filtered[['rank_trace', 'survival_in_days', 'status']]
+    dummies_rank_trace = pd.get_dummies(df_filtered1["rank_trace"], prefix='trace', drop_first=True)
+    df_filtered1 = pd.concat([df_filtered1, dummies_rank_trace], axis=1)
+    df_filtered1 = df_filtered1.drop("rank_trace", axis=1)
+
+    cph = CoxPHFitter(penalizer=0.1)
+    cph.fit(df_filtered1, duration_col='survival_in_days', event_col='status')
+    
+    #cph.print_summary()
+    return cph,logrank_results_df
+
+
+
